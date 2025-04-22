@@ -59,7 +59,7 @@ git config --global user.email "Githubのnoreply メールアドレス（例：1
 1. 以下のサイトからDocker Desktopをダウンロード&インストール
 https://www.docker.com/products/docker-desktop
 2. WSL2（Windows Subsystem for Linux 2）のインストールが求められたら案内に従ってインストール
-    -WSL2をインストールするとゲーム(VALORANT等)のアンチチートに引っかかるので注意
+    - WSL2をインストールするとゲーム(VALORANT等)のアンチチートに引っかかるので注意
 3. インストール後、Docker Desktopを起動（タスクトレイにクジラマークが出ればOK,※ログイン不要）
 4. ターミナルを起動&以下を実行しDockerが使えることを確認
 `docker --version`
