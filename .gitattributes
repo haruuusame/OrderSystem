@@ -1,0 +1,18 @@
+# JavaコードとMarkdownはLFを使用
+*.java     text eol=lf
+*.md       text eol=lf
+
+# テキストファイルはLF（Windows/Unix間の差を吸収）
+*.txt      text eol=lf
+*.sh       text eol=lf
+
+# JARなどのバイナリファイルはGitの差分比較対象外に
+*.jar      binary
+*.class    binary
+*.png      binary
+*.jpg      binary
+*.db       binary
+
+# CSVなどは必要に応じて（e.g. sqliteデータなど）
+*.csv      text eol=lf
+*.sql      text eol=lf

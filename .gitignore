@@ -1,16 +1,5 @@
-# Compiled class file
+# === Java ===
 *.class
-
-# Log file
-*.log
-
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
 *.jar
 *.war
 *.nar
@@ -18,7 +7,38 @@
 *.zip
 *.tar.gz
 *.rar
+*.log
+# === lib以下のjarファイルはコミット対象 === 
+!lib/*.jar
+# === Java: IDEやツール系 ===
+*.ctxt               # BlueJ
+*.iml                # IntelliJ
+*.classpath
+*.project
+*.settings/
+*.idea/
+*.vscode/
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+# === JUnitなどの一時ファイル ===
+test-output/
+test-results/
+
+# === 実行用出力ディレクトリ ===
+out/
+
+# === DevContainerやDocker系 ===
+.devcontainer/.cache/
+.vscode-server/
+.vscode-test/
+**/.DS_Store
+**/Thumbs.db
+
+# === OS・エディタ一時ファイル ===
+*.swp
+*.swo
+*~
+.~lock.*
+ehthumbs.db
+.DS_Store
+Icon?
+._*
