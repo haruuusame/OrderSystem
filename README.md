@@ -74,7 +74,7 @@ GitHubへの操作(`git push`や`git pull`)を行うには、SSH認証が便利�
 
 
 ### Dev Containersのインストール
-VS CodeでDev Containersを検索してインストール
+- VS CodeでDev Containersを検索してインストール
 
 ### リポジトリのダウンロード
 1. リポジトリをダウンロードしたいディレクトリでターミナルを起動
@@ -132,8 +132,8 @@ git add -A   #削除含む全作業
 2. `base: dev` / `compare: feature/<機能名>`のPRを作成する
     - PRタイトルや本文には、対応するIssue番号や機能内容を記載
     - **Issueに関係ない内容を混ぜないように注意**
-- 他のメンバーにコードの動作確認・レビューを依頼
-- レビュー完了後、「squash and merge」で`dev`ブランチにマージ
+3.  他のメンバーにコードの動作確認・レビューを依頼
+4.  レビュー完了後、「squash and merge」で`dev`ブランチにマージ
 ### 統合テストが完了したらmainにマージ
 1. `dev` ブランチでのテスト/動作確認が完了したら
 2. `base: main` / `compare: dev`でPRを作成
