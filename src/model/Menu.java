@@ -10,14 +10,14 @@ public class Menu{
     private String category;
 
     // ======= Constructor =======
-    Menu(int itemId,String itemName,int price,int stockQuantity,String category){
+    public Menu(int itemId,String itemName,int price,int stockQuantity,String category){
         this.itemId = itemId;
         this.itemName = itemName;
         this.price = price;
         this.stockQuantity = stockQuantity;
         this.category = category;
     }
-    
+
     // ======= Getter / Setter =======
     public int getItemId() {
         return itemId;
@@ -38,6 +38,13 @@ public class Menu{
     public String getCategory() {
         return category;
     }
+
+    public boolean setStockQuantity(int stockQuantity) {
+        if(stockQuantity < 0) return false;
+        this.stockQuantity = stockQuantity;
+        return true;
+    }
+
     // ======= Other Methods =======
     @Override
     public boolean equals(Object obj) {
@@ -49,7 +56,7 @@ public class Menu{
 
     @Override
     public int hashCode() {
-        return this.itemId;
+        return Integer.hashCode(itemId);
     }
 
 }
