@@ -1,5 +1,8 @@
 package model;
-
+/**
+ * 商品情報を管理するクラス。
+ * 商品番号、商品名、値段、在庫数、商品カテゴリといった属性を持つ。
+ */
 public class Menu{
 
     // ======= Field =======
@@ -40,16 +43,21 @@ public class Menu{
     }
 
     public boolean setStockQuantity(int stockQuantity) {
+        // stockQuantityは0以上の値を受け付ける
         if(stockQuantity < 0) return false;
         this.stockQuantity = stockQuantity;
         return true;
     }
+    // ======= Method =======
     
+    // Menuクラスをディープコピー
     public Menu copy(){
         return new Menu(itemId,itemName,price,stockQuantity,category);
     }
 
     // ======= Other Methods =======
+    
+    //Menuクラスの区別はitemIdで行う
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

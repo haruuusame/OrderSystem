@@ -196,6 +196,25 @@ public class CartTest {
 
     }
 
+    @Test
+    public void checkoutWithMultipleItemsWorksCorrectly() {
+        Cart cart = new Cart(1);
+        Menu menu1 = dummyMenu();
+        Menu menu2 = new Menu(2, "サイド", 300, 10, "Side");
+
+        cart.addItem(menu1, 2);
+        cart.addItem(menu2, 1);
+
+        Optional<Order> opt = cart.checkout();
+        assertTrue(opt.isPresent());
+
+        Order order = opt.get();
+        assertEquals(2, order.asList().size());
+        assertEquals(18, menu1.getStockQuantity()); // 20 - 2
+        assertEquals(9, menu2.getStockQuantity());  // 10 - 1
+    }
+
+
     //OrderBaseのテスト項目
     
     @Test
@@ -241,6 +260,13 @@ public class CartTest {
         assertEquals(0, cart.getQuantity(notAdded));
         assertEquals(0, cart.getQuantity(notAdded.getItemId()));
     }
+
+    @Test(expected = NullPointerException.class)
+    public void getQuantityWithNullMenuThrows() {
+        Cart cart = new Cart(1);
+        cart.getQuantity((Menu) null);
+    }
+
 
     @Test
     public void containsWorksCorrectly() {

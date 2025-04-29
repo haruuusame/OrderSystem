@@ -6,7 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
+/**
+ * 購入確定前の仮の注文データを管理するクラス。
+ * 商品を追加・数量変更できる。
+ */
 public class Cart extends OrderBase {
 
     // ======= Field =======
@@ -24,14 +27,19 @@ public class Cart extends OrderBase {
     }
 
     // ======= Method =======
+
+    // 同じ商品があれば数量加算、なければ新規追加。
     public boolean addItem(Menu menu,int quantity) {
         if(quantity <= 0) return false;
 
+        // カートに入っていない商品であれば、OrderLineに個数0で追加する
         OrderLine ci = itemMap.computeIfAbsent(menu.getItemId(),id -> new OrderLine(menu, 0));
         
+        // quantity加算する
         return ci.addQuantity(quantity);
     }
 
+    // カートから商品を削除する。成功したらtrueを返す
     public boolean removeItem(int itemId) {
         return itemMap.remove(itemId) != null;
     }
@@ -39,12 +47,14 @@ public class Cart extends OrderBase {
         return removeItem(menu.getItemId());
     }
 
+    // カートの商品の個数を`quantity`に変更する。成功したらtrueを返す。
     public boolean updateQuantity(int itemId,int quantity){
         if(quantity < 0) return false;
 
         OrderLine ci = itemMap.get(itemId);
         if (ci == null) return false;
 
+        // quantityが0の時は商品を削除とみなす
         if(quantity == 0) {
             return removeItem(itemId);
         }
@@ -55,23 +65,26 @@ public class Cart extends OrderBase {
         return updateQuantity(menu.getItemId(), quantity);
     }
 
+    // カートをクリアする
     public void clearCart() {
         itemMap.clear();
     }
-    
+
+    // カート内の全ての商品が在庫数以下になっていればtrueを返す。
     public boolean hasSufficientStockAll() {
         return itemMap.values().stream().allMatch(ci -> ci.getQuantity() <= ci.getMenu().getStockQuantity());
     }
 
+    // カート内の特定の商品が在庫数以下になっていればtrueを返す。
     public boolean hasSufficientStock(int itemId) {
         OrderLine ci = itemMap.get(itemId);
         return ci != null && ci.getQuantity() <= ci.getMenu().getStockQuantity();
     }
-
     public boolean hasSufficientStock(Menu menu) {
         return hasSufficientStock(menu.getItemId());
     }
     
+    // カートの中身を確定し、Orderオブジェクトに変換する。その際、在庫のチェックも行う。
     public Optional<Order> checkout(){
         // 1) カートが空でないかチェック
         if(isEmpty()) return Optional.empty();
@@ -79,7 +92,7 @@ public class Cart extends OrderBase {
         // 2) 在庫チェック
         if(!hasSufficientStockAll()) return Optional.empty();
 
-        // 3) その時点でのMenu情報で注文内容を確定
+        // 3) その時点でのMenu情報で注文内容を確定(itemMapをdeepcopy)
         Map<Integer, OrderLine> orderItem = new LinkedHashMap<>();
         itemMap.forEach((id, ci) -> orderItem.put(id, ci.deepcopy()));
 
@@ -99,7 +112,7 @@ public class Cart extends OrderBase {
 
             return Optional.of(order);
         } catch (RuntimeException ex) {
-            // 7) 失敗時の部分ロールバック
+            // 7) 例外が発生した場合、一部在庫が引き落とされた可能性があるため、ロールバックを行う
             for (OrderLine ci : deducted) {
                 Menu m = ci.getMenu();
                 m.setStockQuantity(m.getStockQuantity() + ci.getQuantity());

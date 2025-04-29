@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
-
+/**
+ * 購入が確定した正式な注文履歴を管理するクラス。
+ */
 public class Order extends OrderBase{
 
     // ======= Field =======
@@ -20,6 +22,7 @@ public class Order extends OrderBase{
     }
 
     public Order(Map<Integer,OrderLine> itemMap) {
+        // orderCount,現在時刻(JST)で初期化
         this(itemMap,orderCount.getAndIncrement(),LocalDateTime.now(ZoneId.of("Asia/Tokyo")));
     }
 
