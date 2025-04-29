@@ -13,13 +13,13 @@ public class Order extends OrderBase{
     private final LocalDateTime orderDate;
 
     // ======= Constructor =======
-    public Order(Map<Integer,CartItem> itemMap,int orderId,LocalDateTime orderDate) {
+    public Order(Map<Integer,OrderLine> itemMap,int orderId,LocalDateTime orderDate) {
         super(itemMap);
         this.orderId = orderId;
         this.orderDate = orderDate;
     }
 
-    public Order(Map<Integer,CartItem> itemMap) {
+    public Order(Map<Integer,OrderLine> itemMap) {
         this(itemMap,orderCount.getAndIncrement(),LocalDateTime.now(ZoneId.of("Asia/Tokyo")));
     }
 

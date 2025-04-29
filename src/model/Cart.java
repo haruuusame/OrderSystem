@@ -27,7 +27,7 @@ public class Cart extends OrderBase {
     public boolean addItem(Menu menu,int quantity) {
         if(quantity <= 0) return false;
 
-        CartItem ci = itemMap.computeIfAbsent(menu.getItemId(),id -> new CartItem(menu, 0));
+        OrderLine ci = itemMap.computeIfAbsent(menu.getItemId(),id -> new OrderLine(menu, 0));
         
         return ci.addQuantity(quantity);
     }
@@ -42,7 +42,7 @@ public class Cart extends OrderBase {
     public boolean updateQuantity(int itemId,int quantity){
         if(quantity < 0) return false;
 
-        CartItem ci = itemMap.get(itemId);
+        OrderLine ci = itemMap.get(itemId);
         if (ci == null) return false;
 
         if(quantity == 0) {
@@ -59,6 +59,19 @@ public class Cart extends OrderBase {
         itemMap.clear();
     }
     
+    public boolean hasSufficientStockAll() {
+        return itemMap.values().stream().allMatch(ci -> ci.getQuantity() <= ci.getMenu().getStockQuantity());
+    }
+
+    public boolean hasSufficientStock(int itemId) {
+        OrderLine ci = itemMap.get(itemId);
+        return ci != null && ci.getQuantity() <= ci.getMenu().getStockQuantity();
+    }
+
+    public boolean hasSufficientStock(Menu menu) {
+        return hasSufficientStock(menu.getItemId());
+    }
+    
     public Optional<Order> checkout(){
         // 1) カートが空でないかチェック
         if(isEmpty()) return Optional.empty();
@@ -67,13 +80,13 @@ public class Cart extends OrderBase {
         if(!hasSufficientStockAll()) return Optional.empty();
 
         // 3) その時点でのMenu情報で注文内容を確定
-        Map<Integer, CartItem> orderItem = new LinkedHashMap<>();
+        Map<Integer, OrderLine> orderItem = new LinkedHashMap<>();
         itemMap.forEach((id, ci) -> orderItem.put(id, ci.deepcopy()));
 
-        List<CartItem> deducted = new ArrayList<>();
+        List<OrderLine> deducted = new ArrayList<>();
         try {
             // 4) 在庫一括引き落とし
-            for (CartItem ci : itemMap.values()) {
+            for (OrderLine ci : itemMap.values()) {
                 Menu m = ci.getMenu();
                 if(!m.setStockQuantity(m.getStockQuantity() - ci.getQuantity())) throw new IllegalArgumentException("在庫不足");
                 deducted.add(ci);
@@ -87,26 +100,13 @@ public class Cart extends OrderBase {
             return Optional.of(order);
         } catch (RuntimeException ex) {
             // 7) 失敗時の部分ロールバック
-            for (CartItem ci : deducted) {
+            for (OrderLine ci : deducted) {
                 Menu m = ci.getMenu();
                 m.setStockQuantity(m.getStockQuantity() + ci.getQuantity());
             }
 
             return Optional.empty();
         }    
-    }
-
-    public boolean hasSufficientStockAll() {
-        return itemMap.values().stream().allMatch(ci -> ci.getQuantity() <= ci.getMenu().getStockQuantity());
-    }
-
-    public boolean hasSufficientStock(int itemId) {
-        CartItem ci = itemMap.get(itemId);
-        return ci != null && ci.getQuantity() <= ci.getMenu().getStockQuantity();
-    }
-
-    public boolean hasSufficientStock(Menu menu) {
-        return hasSufficientStock(menu.getItemId());
     }
 
 }

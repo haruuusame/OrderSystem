@@ -1,7 +1,7 @@
 package test.model;
 
 import model.Cart;
-import model.CartItem;
+import model.OrderLine;
 import model.Menu;
 import model.Order;
 import org.junit.Test;
@@ -22,7 +22,7 @@ public class CartTest {
         Menu menu = dummyMenu();
 
         assertTrue(cart.addItem(menu, 2));
-        List<CartItem> items = cart.asList();
+        List<OrderLine> items = cart.asList();
         assertEquals(1, items.size());
         assertEquals(2, cart.asList().get(0).getQuantity());
     }
@@ -207,8 +207,8 @@ public class CartTest {
         cart.addItem(menu1, 1);
         cart.addItem(menu2, 2);
 
-        Map<Integer, CartItem> map = cart.asMap();
-        List<CartItem> list = cart.asList();
+        Map<Integer, OrderLine> map = cart.asMap();
+        List<OrderLine> list = cart.asList();
 
         assertEquals(2, map.size());
         assertTrue(map.containsKey(menu1.getItemId()));

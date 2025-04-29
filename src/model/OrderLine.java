@@ -2,14 +2,14 @@ package model;
 
 import java.util.Objects;
 
-public class CartItem {
+public class OrderLine {
 
     // ======= Field =======
     private Menu menu;
     private int quantity;
 
     // ======= Constructor =======
-    public CartItem(Menu menu,int quantity) {
+    public OrderLine(Menu menu,int quantity) {
         this.menu = menu;
         this.quantity = quantity;
     }
@@ -41,20 +41,20 @@ public class CartItem {
 
     // ======= Method =======
 
-    public CartItem copy() {
+    public OrderLine copy() {
         //Menuは在庫数を保持するため参照コピー
-        return new CartItem(this.getMenu(),this.getQuantity()); 
+        return new OrderLine(this.getMenu(),this.getQuantity()); 
     }
 
-    public CartItem deepcopy() {
-        return new CartItem(this.getMenu().copy(),this.getQuantity());
+    public OrderLine deepcopy() {
+        return new OrderLine(this.getMenu().copy(),this.getQuantity());
     }
 
     // ======= Other Method =======
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof CartItem ci)) return false;
+        if (!(o instanceof OrderLine ci)) return false;
         return quantity == ci.quantity && Objects.equals(menu.getItemId(), ci.menu.getItemId());
     }
     @Override
