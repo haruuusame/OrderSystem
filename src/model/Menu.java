@@ -44,6 +44,10 @@ public class Menu{
         this.stockQuantity = stockQuantity;
         return true;
     }
+    
+    public Menu copy(){
+        return new Menu(itemId,itemName,price,stockQuantity,category);
+    }
 
     // ======= Other Methods =======
     @Override

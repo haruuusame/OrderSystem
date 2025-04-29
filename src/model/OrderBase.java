@@ -1,30 +1,61 @@
 package model;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public abstract class OrderBase {
 
     // ======= Field =======
-    protected List<CartItem> items;
+    protected Map<Integer, CartItem> itemMap;
 
     // ======= Constructor =======
     public OrderBase() {
-        this.items = new ArrayList<>();
+        this.itemMap = new LinkedHashMap<>();
     }
-
-    // ======= Getter / Setter =======
-    public List<CartItem> getItems() {
-        return items;
+    public OrderBase(Map<Integer, CartItem> itemMap) {
+        //引数のmapをディープコピー
+        Map<Integer, CartItem> snapshot = new LinkedHashMap<>();
+        itemMap.forEach((id, ci) -> snapshot.put(id, ci.copy()));
+        this.itemMap = Collections.unmodifiableMap(snapshot);
     }
 
     // ======= Method =======
-    public int calculateTotalPrice() {
-        int total = 0;
-        for (CartItem item : items) {
-            total += item.getMenu().getPrice() * item.getQuantity();
-        }
-        return total;
+    public Map<Integer, CartItem> asMap() {
+        return Collections.unmodifiableMap(itemMap);
     }
+
+    public List<CartItem> asList() {
+        return List.copyOf(itemMap.values());
+    }
+
+    public int calculateTotalPrice() {
+        return itemMap.values().stream().mapToInt(ci -> ci.getMenu().getPrice() * ci.getQuantity()).sum();
+    }
+
+    public int getQuantity(int itemId) {
+        CartItem ci = itemMap.get(itemId);
+        return (ci != null) ? ci.getQuantity() : 0;
+    }
+    public int getQuantity(Menu menu) {
+        return getQuantity(menu.getItemId());
+    }
+
+    public boolean contains(int itemId) {
+        return itemMap.containsKey(itemId);
+    }
+    public boolean contains(Menu menu) {
+        return contains(menu.getItemId());
+    }
+
+    public boolean isEmpty(){
+        return itemMap.size() == 0;
+    }
+
+    public int size() {
+        return itemMap.size();
+    }
+    
 
 }

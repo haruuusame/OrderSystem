@@ -2,30 +2,32 @@ package model;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Order extends OrderBase{
 
     // ======= Field =======
     private static AtomicInteger orderCount = new AtomicInteger(1);
-    private int orderId;
-    private LocalDateTime orderDate;
+    private final int orderId;
+    private final LocalDateTime orderDate;
 
     // ======= Constructor =======
-    public Order(List<CartItem> items){
-        this.orderId = orderCount.getAndIncrement();
-        this.orderDate = LocalDateTime.now(ZoneId.of("Asia/Tokyo"));
-        for(CartItem item : items){
-            this.items.add(item.copy());
-        }
+    public Order(Map<Integer,CartItem> itemMap,int orderId,LocalDateTime orderDate) {
+        super(itemMap);
+        this.orderId = orderId;
+        this.orderDate = orderDate;
+    }
+
+    public Order(Map<Integer,CartItem> itemMap) {
+        this(itemMap,orderCount.getAndIncrement(),LocalDateTime.now(ZoneId.of("Asia/Tokyo")));
     }
 
     // ======= Getter / Setter =======
     public int getOrderId() {
         return orderId;
     }
-    
+
     public LocalDateTime getOrderDate() {
         return orderDate;
     }
