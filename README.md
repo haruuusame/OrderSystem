@@ -19,10 +19,11 @@ VS Code の Dev Container を活用し、全員が同一の環境で作業でき
 ├── out/               # コンパイル結果（.classファイル）を出力
 ├── lib/               # SQLiteやJUnitなどの外部ライブラリ（.jar）
 ├── src/               # メインのJavaコード
-│   ├── controller/    # ユーザー操作の処理（例: ボタン押下時呼び出される処理）
-│   ├── model/         # データモデル（例: 商品や注文などのクラス）
-│   ├── util/          # DB操作や共通処理
-│   └── view/          # ユーザー画面（CUI/GUIなど）
+│   ├── controller/    # 入力画面（はるき）
+│   ├── model/         # データモデル
+│   ├── util/          # DB操作や共通処理（健吾）
+│   └── view/          # 従業員画面（たすく）
+│   └── customer       # お客様画面
 ├── test/              # テストコード（JUnit など）
 └── .devcontainer/     # DevContainer用設定ファイル（VS Code共有用）
 ```
@@ -142,3 +143,5 @@ git add -A   #削除含む全作業
 ## Gitに含めないファイル(`.gitignore`)
 - `*.class`など、コンパイルで生成されるファイル
 - `.DS_Store`など、OS依存ファイル
+
+adachi shuma
