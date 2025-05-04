@@ -3,7 +3,9 @@ package model;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+/**
+ * 複数のMenuクラスをまとめて管理するクラス。
+ */
 public class MenuCatalog {
     private final Map<Integer, Menu> menuMap;
 
@@ -14,18 +16,22 @@ public class MenuCatalog {
         }
     }
 
+    // itemIdに対応するMenuを返す
     public Menu get(int itemId) {
         return menuMap.get(itemId);
     }
 
-    public boolean has(int itemId) {
-        return menuMap.containsKey(itemId);
-    }
-
+    // 登録されているMenuをListとして返す
     public List<Menu> getAll() {
         return List.copyOf(menuMap.values());
     }
 
+    // menuMapにitemIdを含んでいるかどうかを返す
+    public boolean has(int itemId) {
+        return menuMap.containsKey(itemId);
+    }
+
+    // categoryに合致するMenuをListとして返す
     public List<Menu> findByCategory(String category) {
         if (category == null || category.isBlank()) {
             return List.copyOf(menuMap.values());
@@ -33,10 +39,12 @@ public class MenuCatalog {
         return menuMap.values().stream().filter(m -> m.getCategory().equals(category)).toList();
     }
 
+    // 登録されているメニューの数を返す
     public int size() {
         return menuMap.size();
     }
 
+    // メニューが一つもなければTrueを返す
     public boolean isEmpty() {
         return menuMap.isEmpty();
     }
