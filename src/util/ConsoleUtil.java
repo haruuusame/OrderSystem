@@ -28,13 +28,35 @@ public class ConsoleUtil {
     }
 
     // タイトルフォーマットで文章を描画。引数は可変長
-    public static void title_view(String... title){
-        System.out.println("+------------------------------------------------------+");
-        for(String t:title){
-            System.out.printf("| %-50s |\n", t);
+    public static void title_view(String... lines) {
+        final int displayWidth = 60; // 表示幅
+        String border = "+" + "-".repeat(displayWidth+2) + "+";
+    
+        System.out.println(border);
+        for (String line : lines) {
+            int padding = displayWidth - getDisplayWidth(line);
+            System.out.print("| " + line);
+            System.out.print(" ".repeat(padding));
+            System.out.println(" |");
         }
-        System.out.println("+------------------------------------------------------+");
+        System.out.println(border);
     }
+    
+
+    // 文字列から全角文字を半角二文字換算の長さを取得
+    public static int getDisplayWidth(String s) {
+        int width = 0;
+        for (char c : s.toCharArray()) {
+            // 全角（日本語・記号）なら2幅、それ以外なら1幅とする
+            if (String.valueOf(c).matches("[\\p{IsHiragana}\\p{IsKatakana}\\p{IsHan}１２３４５６７８９０ー～、。・「」『』【】（）｛｝！？：；｀＋−＝＿｜￥＾＠]")) {
+                width += 2;
+            } else {
+                width += 1;
+            }
+        }
+        return width;
+    }
+    
 
     // エラーを表示
     public static void error_view(String message){

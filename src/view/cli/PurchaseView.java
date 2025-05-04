@@ -48,7 +48,7 @@ public class PurchaseView {
         // 初回に描画する
         ConsoleUtil.title_view("OrderSystem");
         menu_list_view();   
-        list_view(cart,"カート");
+        cart_view();
 
         // コマンド入力はプログラム終了まで受付続ける
         while(true){
@@ -73,7 +73,7 @@ public class PurchaseView {
             case "menu":
                 return menu_list_view();
             case "cart":
-                return list_view(cart, "カート");
+                return list_view(cart, "カート",true);
             case "add":
                 return addCart_view();
             case "update":
@@ -102,15 +102,21 @@ public class PurchaseView {
     }
 
     // Cart・Orderクラスの商品リストを描画する画面。タイトルを指定可能。
-    private boolean list_view(OrderBase orderBase, String title) {
+    private boolean list_view(OrderBase orderBase, String title,boolean showItemId) {
         ConsoleUtil.title_view(title);
         // 注文(カート内)の商品と個数を描画
         for(OrderLine item:orderBase.asList()) {
-            System.out.printf(" ・メニュー番号%d:%s %d円 × %d\n",item.getMenu().getItemId(),item.getMenu().getItemName(),item.getMenu().getPrice(),item.getQuantity());
+            String itemId_str = showItemId ? String.format("メニュー番号%d:",item.getMenu().getItemId()) : "";
+            System.out.printf(" ・%s%s %d円 × %d\n",itemId_str,item.getMenu().getItemName(),item.getMenu().getPrice(),item.getQuantity());
         }
         String price_str = String.format("合計金額:%d円",orderBase.calculateTotalPrice());
         ConsoleUtil.title_view(price_str);
         return true;
+    }
+
+    // 
+    private boolean cart_view() {
+        return list_view(cart,"カート",true);
     }
 
     // カートに商品を追加する画面
@@ -133,7 +139,7 @@ public class PurchaseView {
         }
         
         // カートを表示
-        list_view(cart, "カート");
+        cart_view();
 
         return success;
     }
@@ -161,7 +167,7 @@ public class PurchaseView {
         }
 
         // カートを表示
-        list_view(cart,"カート");
+        cart_view();
 
         return success;
     }
@@ -189,7 +195,7 @@ public class PurchaseView {
 
             // 注文内容を描画
             System.out.println("以下の内容で注文を確定しました。");
-            list_view(order, "注文内容");
+            list_view(order, "注文内容",false);
             System.out.printf("注文番号は %d です。\n",order.getOrderId());
             return true;
         }        
