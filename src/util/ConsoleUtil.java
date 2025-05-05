@@ -1,10 +1,18 @@
 package util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 /**
- * CLIの共通処理を管理するクラス
+ * CLIの描画の共通処理を管理するクラス
  */
+
 public class ConsoleUtil {
+
+    // ======= Constants =======
+    public static final int DISPLAY_WIDTH = 60; // 表示幅
+
+    // ======= Methods =======
 
     // 画面をクリアする(UNIX系で有効)
     public static void clearScreen() {
@@ -22,33 +30,38 @@ public class ConsoleUtil {
                 return value;
             } else {
                 scanner.nextLine();
-                error_view("無効な数字です。再入力してください。");
+                showError("無効な数字です。再入力してください。");
             }
         }
     }
 
-    // タイトルフォーマットで文章を描画。引数は可変長
-    public static void title_view(String... lines) {
-        final int displayWidth = 60; // 表示幅
-        String border = "+" + "-".repeat(displayWidth+2) + "+";
+    // ヘッダー文章を描画。引数は可変長
+    public static void showHeader(String... lines) {
+        String border = "+" + "-".repeat(DISPLAY_WIDTH+2) + "+";
     
         System.out.println(border);
         for (String line : lines) {
-            int padding = displayWidth - getDisplayWidth(line);
-            System.out.print("| " + line);
-            System.out.print(" ".repeat(padding));
-            System.out.println(" |");
+            for (String wrapped : wrapLine(line, DISPLAY_WIDTH)) {
+                int padding = DISPLAY_WIDTH - getLineLength(wrapped);
+                System.out.print("| " + wrapped);
+                System.out.print(" ".repeat(padding));
+                System.out.println(" |");
+            }
         }
         System.out.println(border);
     }
-    
 
-    // 文字列から全角文字を半角二文字換算の長さを取得
-    public static int getDisplayWidth(String s) {
+    // エラーを表示
+    public static void showError(String message){
+        System.out.println("[エラー]" + message);
+    }
+    
+    // 全角文字を半角二文字分としたときの文字列の長さを取得
+    public static int getLineLength(String s) {
         int width = 0;
         for (char c : s.toCharArray()) {
             // 全角（日本語・記号）なら2幅、それ以外なら1幅とする
-            if (String.valueOf(c).matches("[\\p{IsHiragana}\\p{IsKatakana}\\p{IsHan}１２３４５６７８９０ー～、。・「」『』【】（）｛｝！？：；｀＋−＝＿｜￥＾＠]")) {
+            if (isFullWidth(c)) {
                 width += 2;
             } else {
                 width += 1;
@@ -56,11 +69,36 @@ public class ConsoleUtil {
         }
         return width;
     }
-    
 
-    // エラーを表示
-    public static void error_view(String message){
-        System.out.println("[エラー]" + message);
+    // maxWidth文字区切りで文字列の分割を行う
+    public static List<String> wrapLine(String line,int maxWidth) {
+        List<String> result = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int width = 0;
+
+        for (char c : line.toCharArray()) {
+            int charWidth = isFullWidth(c) ? 2 : 1;
+
+            if (width + charWidth > maxWidth) {
+                result.add(current.toString());
+                current = new StringBuilder();
+                width = 0;
+            }
+
+            current.append(c);
+            width += charWidth;
+        }
+
+        if (current.length() > 0) {
+            result.add(current.toString());
+        }
+
+        return result;
+    }
+
+    // 全角であればtrueを返す
+    public static boolean isFullWidth(char c){
+        return String.valueOf(c).matches("[\\p{IsHiragana}\\p{IsKatakana}\\p{IsHan}１２３４５６７８９０ー～、。・「」『』【】（）｛｝！？：；｀＋−＝＿｜￥＾＠]");
     }
 
 }

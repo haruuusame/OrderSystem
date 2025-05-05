@@ -1,14 +1,12 @@
 package view.cli;
 
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Scanner;
 
-import controller.cli.PurchaseController;
-import model.Cart;
+import controller.cli.OrderSessionController;
 import model.Menu;
-import model.MenuCatalog;
 import model.Order;
 import model.OrderBase;
 import model.OrderLine;
@@ -16,53 +14,54 @@ import util.ConsoleUtil;
 /**
  * 購入画面(CLI)
  */
-public class PurchaseView {
+public class OrderCliView {
 
     // ======= Field =======
     private Scanner scanner;
-    private MenuCatalog fullCatalog;    // DBの代わりに一時的に実装
-    private MenuCatalog currentCatalog;
-    private Cart cart;
-    private PurchaseController purCon;
+    private OrderSessionController sessionController;
 
-    // 簡易的なカテゴリ(enmu移行予定)
-    private static final Map<Integer, String> CATEGORY_MAP = Map.of(
-    1, "Food",
-    2, "Side",
-    3, "Drink"
-    );
+    // 簡易的なカテゴリリスト(enmu移行予定)
+    private static final String RESET_COMMAND = "All";
+    private static final Map<Integer, String> CATEGORY_MAP = new LinkedHashMap<>();
+    static {
+        CATEGORY_MAP.put(1,RESET_COMMAND);
+        CATEGORY_MAP.put(2, "Food");
+        CATEGORY_MAP.put(3, "Side");
+        CATEGORY_MAP.put(4, "Drink");
+        CATEGORY_MAP.put(5,"noItem");
+    }
 
     // ======= Constructor =======
-    public PurchaseView(MenuCatalog fullCatalog) {
-        scanner = new Scanner(System.in);
-        this.fullCatalog = fullCatalog;
-        this.currentCatalog = fullCatalog;
-        cart = new Cart(1);
-        this.purCon = new PurchaseController(cart,fullCatalog);
+    public OrderCliView(OrderSessionController sessionController,Scanner scanner) {
+        this.scanner = scanner;
+        this.sessionController = sessionController;
+    }
+    public OrderCliView(OrderSessionController purCon) {
+        this(purCon, new Scanner(System.in));
     }
 
     // ======= Method =======
 
     // 画面を呼び出すメソッド
-    public void main_view() {
+    public void showMain() {
         // 初回に描画する
-        ConsoleUtil.title_view("OrderSystem");
-        menu_list_view();   
-        cart_view();
+        ConsoleUtil.showHeader("OrderSystem");
+        showMenuList();   
+        showCart();
 
         // コマンド入力はプログラム終了まで受付続ける
         while(true){
-            command_view();
+            showCommand();
         }
     }
 
-    // コマンド入力を受け付ける画面
-    private boolean command_view() {
+    // コマンド入力を受け付ける画面を描画
+    private boolean showCommand() {
 
         // 説明文章の描画
         String msg_1 = "コマンドを入力してください";
         String msg_2 = "(menu / cart / add / update / filter / checkout  / exit)";
-        ConsoleUtil.title_view(msg_1,msg_2);
+        ConsoleUtil.showHeader(msg_1,msg_2);
 
         // コマンドの受付
         System.out.print("入力:");
@@ -71,59 +70,60 @@ public class PurchaseView {
         // コマンドによる処理の分岐
         switch (command) {
             case "menu":
-                return menu_list_view();
+                return showMenuList();
             case "cart":
-                return list_view(cart, "カート",true);
+                return showCart();
             case "add":
-                return addCart_view();
+                return showAddCart();
             case "update":
-                return updateCartItemQuantity_view();
+                return showUpdateCartItemQuantity();
             case "filter":
-                return update_catalog_view();
+                return showUpdateCatalog();
             case "checkout":
-                return checkout_view();
+                return showCheckout();
             case "exit":
-                return exit_view();
+                return showExit();
             default:
-                ConsoleUtil.error_view("無効なコマンドです。再入力してください。");
+                ConsoleUtil.showError("無効なコマンドです。再入力してください。");
                 return false;
         }
     }
 
-    // メニューカタログを描画する画面
-    private boolean menu_list_view() {
-        ConsoleUtil.title_view("メニュー");
+    // メニュー一覧を描画
+    private boolean showMenuList() {
+        ConsoleUtil.showHeader("メニュー");
 
         // currentCatalogを描画
-        for(Menu menu:currentCatalog.getAll()) {
+        for(Menu menu:sessionController.getCatalogMenus()) {
             System.out.printf(" ・メニュー番号%d:%s %d円\n",menu.getItemId(),menu.getItemName(),menu.getPrice());
         }
         return true;
     }
 
-    // Cart・Orderクラスの商品リストを描画する画面。タイトルを指定可能。
-    private boolean list_view(OrderBase orderBase, String title,boolean showItemId) {
-        ConsoleUtil.title_view(title);
+    // Cart・Orderクラスの商品リストを描画。タイトルを指定可能。
+    // showItemIdがtrueでメニュー番号を表示する。falseだと表示しない。
+    private boolean showList(OrderBase orderBase, String title,boolean showItemId) {
+        ConsoleUtil.showHeader(title);
         // 注文(カート内)の商品と個数を描画
         for(OrderLine item:orderBase.asList()) {
             String itemId_str = showItemId ? String.format("メニュー番号%d:",item.getMenu().getItemId()) : "";
             System.out.printf(" ・%s%s %d円 × %d\n",itemId_str,item.getMenu().getItemName(),item.getMenu().getPrice(),item.getQuantity());
         }
         String price_str = String.format("合計金額:%d円",orderBase.calculateTotalPrice());
-        ConsoleUtil.title_view(price_str);
+        ConsoleUtil.showHeader(price_str);
         return true;
     }
 
-    // 
-    private boolean cart_view() {
-        return list_view(cart,"カート",true);
+    // カートの中身を描画
+    private boolean showCart() {
+        return showList(sessionController.getCart(),"カート",true);
     }
 
-    // カートに商品を追加する画面
-    private boolean addCart_view(){
+    // カートに商品を追加する画面を描画
+    private boolean showAddCart(){
 
         // メニューカタログを描画
-        menu_list_view();
+        showMenuList();
 
         // 数字入力受付
         System.out.println("メニュー番号と個数を入力してください。");
@@ -131,25 +131,25 @@ public class PurchaseView {
         int quantity = ConsoleUtil.safeIntInput("個数:",scanner);
 
         // カート追加処理を依頼
-        boolean success = purCon.addCart(itemId,quantity);
+        boolean success = sessionController.addCart(itemId,quantity);
         
         // 失敗時にエラーを表示(カートはリセットされない)
         if(!success) {
-            ConsoleUtil.error_view("カートへの追加に失敗しました(商品が存在しない、または個数が無効)。");
+            ConsoleUtil.showError("カートへの追加に失敗しました(商品が存在しない、または個数が無効)。");
         }
         
         // カートを表示
-        cart_view();
+        showCart();
 
         return success;
     }
 
     // カートの中の商品の個数を変更する画面
-    private boolean updateCartItemQuantity_view() {
+    private boolean showUpdateCartItemQuantity() {
 
         // カートが空だったらエラーを表示
-        if(cart.isEmpty()) {
-            ConsoleUtil.error_view("カートが空です。");
+        if(sessionController.cartIsEmpty()) {
+            ConsoleUtil.showError("カートが空です。");
             return false;
         }
 
@@ -159,35 +159,35 @@ public class PurchaseView {
         int quantity = ConsoleUtil.safeIntInput("新しい個数:",scanner);
 
         // カート変更処理を依頼
-        boolean success = purCon.updateCartItemQuantity(itemId, quantity);
+        boolean success = sessionController.updateCartItemQuantity(itemId, quantity);
 
         // 失敗時にエラーを表示(カートはリセットされない)
         if(!success) {
-            ConsoleUtil.error_view("変更に失敗しました。(商品が存在しない、または数量が不正)");
+            ConsoleUtil.showError("変更に失敗しました。(商品が存在しない、または数量が不正)");
         }
 
         // カートを表示
-        cart_view();
+        showCart();
 
         return success;
     }
 
-    // 注文処理を行う画面
-    private boolean checkout_view(){
+    // 注文処理を行う画面を描画
+    private boolean showCheckout(){
 
         // カートが空だったらエラーを表示
-        if(cart.isEmpty()) {
-            ConsoleUtil.error_view("カートが空です。");
+        if(sessionController.cartIsEmpty()) {
+            ConsoleUtil.showError("カートが空です。");
             return false;
         }
 
         // チェックアウト処理を依頼
         System.out.println("注文を行います。");
-        Optional<Order> checkout = purCon.checkout();
+        Optional<Order> checkout = sessionController.checkout();
 
         if(checkout.isEmpty()) {
             // checkoutが空 = 注文に失敗(カートはリセットされない)
-            ConsoleUtil.error_view("注文に失敗しました。");
+            ConsoleUtil.showError("注文に失敗しました。");
             return false;
         }else{
             // checkoutが存在 = 注文に成功(カートはリセットされている)
@@ -195,55 +195,59 @@ public class PurchaseView {
 
             // 注文内容を描画
             System.out.println("以下の内容で注文を確定しました。");
-            list_view(order, "注文内容",false);
+            showList(order, "注文内容",false);
             System.out.printf("注文番号は %d です。\n",order.getOrderId());
             return true;
         }        
     }
 
-    // メニューカタログを更新・カテゴリで絞り込みする画面
-    public boolean update_catalog_view() {
-
+    // メニューカタログを更新・カテゴリで絞り込みする画面を描画
+    public boolean showUpdateCatalog() {
         // 説明文章の描画
         String msg_1 = "メニュー絞り込み";
         String msg_2 = "メニューをフィルタリングします。カテゴリ番号を入力してください。";
         StringBuilder msg_3B = new StringBuilder();
         CATEGORY_MAP.forEach((k,v) -> msg_3B.append(String.format("%d: %s",k,v)));
         String msg_3 = msg_3B.toString();
-        ConsoleUtil.title_view(msg_1,msg_2,msg_3);
+        ConsoleUtil.showHeader(msg_1,msg_2,msg_3);
         
         // カテゴリ番号の入力受付
-        int filter = ConsoleUtil.safeIntInput("カテゴリ番号", scanner);
+        int filter = ConsoleUtil.safeIntInput("カテゴリ番号:", scanner);
 
         // 番号をカテゴリに変換
         String category_filter = CATEGORY_MAP.get(filter);
+
+        // 番号に対応するカテゴリが存在しなければエラーを表示。
         if (category_filter == null) {
-            // 番号に対応するカテゴリが存在しなければエラーを表示し、絞り込みを解除する。
-            ConsoleUtil.error_view("不正な値です。");
-            currentCatalog = fullCatalog;    
+            ConsoleUtil.showError("不正な値です。");
             return false;
+        }
+
+        // RESET_COMMANDの時はカタログをリセットしてtrueを返す。
+        if (category_filter.equals(RESET_COMMAND)) {
+            sessionController.resetCatalog();
+            showMenuList();
+            return true;
         }
 
         // カテゴリからカタログを絞り込み
-        List<Menu> filtered = purCon.catalogFindByCategory(category_filter);
-        if(filtered.isEmpty()) {
+        sessionController.catalogFindByCategory(category_filter);
+
+        boolean success = !sessionController.getCatalogMenus().isEmpty();
+        if(!success) {
             // カテゴリに対応する商品が存在しなければエラーを表示し、絞り込みを解除する。
-            ConsoleUtil.error_view("商品が見つかりませんでした。全メニューを表示します。");
-            currentCatalog = fullCatalog;    
-            return false;
+            ConsoleUtil.showError("商品が見つかりませんでした。全メニューを表示します。");
+            sessionController.resetCatalog();
         }
-        
-        // メニューカタログを更新
-        currentCatalog = new MenuCatalog(filtered);
 
         // メニューカタログを描画
-        menu_list_view();
-        return true;
+        showMenuList();
+        return success;
         
     }
 
     // 終了処理を実行してプログラムを終了する
-    private boolean exit_view(){
+    private boolean showExit(){
         System.out.println("ご利用ありがとうございました。終了します。");
         System.exit(0);
         // 到達しないがswitch-caseの一貫性を保つため残す

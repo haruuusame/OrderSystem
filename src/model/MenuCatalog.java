@@ -7,14 +7,19 @@ import java.util.Map;
  * 複数のMenuクラスをまとめて管理するクラス。
  */
 public class MenuCatalog {
+
+    // ======= Field =======
     private final Map<Integer, Menu> menuMap;
 
+    // ======= Constructor =======
     public MenuCatalog(List<Menu> menus){
         this.menuMap = new LinkedHashMap<>();
         for(Menu m : menus){
             menuMap.put(m.getItemId(), m);
         }
     }
+
+    // ======= Method =======
 
     // itemIdに対応するMenuを返す
     public Menu get(int itemId) {
@@ -26,7 +31,7 @@ public class MenuCatalog {
         return List.copyOf(menuMap.values());
     }
 
-    // menuMapにitemIdを含んでいるかどうかを返す
+    // menuMapにitemIdを含んでいればtrueを返す
     public boolean has(int itemId) {
         return menuMap.containsKey(itemId);
     }
@@ -44,7 +49,7 @@ public class MenuCatalog {
         return menuMap.size();
     }
 
-    // メニューが一つもなければTrueを返す
+    // メニューが一つも登録されていなければtrueを返す
     public boolean isEmpty() {
         return menuMap.isEmpty();
     }
