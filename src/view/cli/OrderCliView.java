@@ -60,28 +60,27 @@ public class OrderCliView {
 
         // 説明文章の描画
         String msg_1 = "コマンドを入力してください";
-        String msg_2 = "(menu / cart / add / update / filter / checkout  / exit)";
+        String msg_2 = "(1: メニュー表示 / 2: メニュー絞り込み / 3: カート表示 / 4: カートに追加 / 5: 内容変更 / 6: 注文 / 7: 終了)";
         ConsoleUtil.showHeader(msg_1,msg_2);
 
         // コマンドの受付
-        System.out.print("入力:");
-        String command = scanner.nextLine();
+        int command = ConsoleUtil.safeIntInput("入力:",scanner);
 
         // コマンドによる処理の分岐
         switch (command) {
-            case "menu":
+            case 1:
                 return showMenuList();
-            case "cart":
-                return showCart();
-            case "add":
-                return showAddCart();
-            case "update":
-                return showUpdateCartItemQuantity();
-            case "filter":
+            case 2:
                 return showUpdateCatalog();
-            case "checkout":
+            case 3:
+                return showCart();
+            case 4:
+                return showAddCart();
+            case 5:
+                return showUpdateCartItemQuantity();
+            case 6:
                 return showCheckout();
-            case "exit":
+            case 7:
                 return showExit();
             default:
                 ConsoleUtil.showError("無効なコマンドです。再入力してください。");
@@ -155,6 +154,7 @@ public class OrderCliView {
 
         // 数字入力受付
         System.out.println("個数を変更する商品を選択してください。");
+        showCart();
         int itemId = ConsoleUtil.safeIntInput("メニュー番号:", scanner);
         int quantity = ConsoleUtil.safeIntInput("新しい個数:",scanner);
 
@@ -207,7 +207,7 @@ public class OrderCliView {
         String msg_1 = "メニュー絞り込み";
         String msg_2 = "メニューをフィルタリングします。カテゴリ番号を入力してください。";
         StringBuilder msg_3B = new StringBuilder();
-        CATEGORY_MAP.forEach((k,v) -> msg_3B.append(String.format("%d: %s",k,v)));
+        CATEGORY_MAP.forEach((k,v) -> msg_3B.append(String.format("%d: %s / ",k,v)));
         String msg_3 = msg_3B.toString();
         ConsoleUtil.showHeader(msg_1,msg_2,msg_3);
         
