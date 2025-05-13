@@ -207,7 +207,9 @@ public class OrderCliView {
         String msg_1 = "メニュー絞り込み";
         String msg_2 = "メニューをフィルタリングします。カテゴリ番号を入力してください。";
         StringBuilder msg_3B = new StringBuilder();
+        msg_3B.append("(");
         CATEGORY_MAP.forEach((k,v) -> msg_3B.append(String.format("%d: %s / ",k,v)));
+        msg_3B.append(")");
         String msg_3 = msg_3B.toString();
         ConsoleUtil.showHeader(msg_1,msg_2,msg_3);
         
