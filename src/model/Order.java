@@ -34,4 +34,7 @@ public class Order extends OrderBase{
     public LocalDateTime getOrderDate() {
         return orderDate;
     }
+    public Map<Integer, OrderLine> getItemMap() {
+        return itemMap;
+    }
 }
