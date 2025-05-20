@@ -14,6 +14,8 @@ public class Employee {
         int totalPrice = order.calculateTotalPrice();
 
         System.out.println("注文内容確認");
+        System.out.printf("お客様番号：%d\n", order.getOrderId());
+        System.out.println("注文日時：" + order.getOrderDate());
         System.out.println("商品名 | 金額 | 個数");
         for (OrderLine line : order.asList()) {
             String itemName = line.getMenu().getItemName();
@@ -41,6 +43,8 @@ public class Employee {
         int n = itemNameList.size();
         totalSales += totalPrice;
         System.out.println("注文履歴");
+        System.out.printf("お客様番号：%d\n", order.getOrderId());
+        System.out.printf("注文日時：" + order.getOrderDate());
         for (int i = 0; i < n; i++) {
             System.out.printf("%s | %d | %d\n", 
             itemNameList.get(i), itemPriceList.get(i), itemQuantityList.get(i));
