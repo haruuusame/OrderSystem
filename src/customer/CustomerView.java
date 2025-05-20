@@ -20,20 +20,19 @@ public class CustomerView {
         System.out.println("注文番号: " + order.getOrderId()); // 注文番号を表示
         System.out.println("注文日時: " + order.getOrderDate()); // 注文日時を表示
 
-        int total = 0; // 合計金額を計算するための変数
         System.out.println("\n--- 注文内容 ---");
         
         // 商品名、単価、数量、小計を列に並べて表示
         System.out.printf("%-20s %-10s %-10s %-10s%n", "商品名", "単価", "数量", "小計");
 
         // 注文に含まれる全ての商品について、商品情報を表示
-        for (OrderLine line : order.getItemMap().values()) {
+        for (OrderLine line : order.asList()) {
             // 商品の名前、価格、数量、小計を取得
             String itemName = line.getMenu().getItemName(); // 商品名
             int price = line.getMenu().getPrice(); // 商品の単価
             int quantity = line.getQuantity(); // 注文した数量
-            int subtotal = price * quantity; // 小計（単価 × 数量）
-            total += subtotal; // 小計を合計金額に加算
+            int subtotal = line.getSubtotal();
+
 
             // 各商品情報を整形して表示
             System.out.printf("%-20s %-10s %-10d %-10s%n",
@@ -42,6 +41,8 @@ public class CustomerView {
                     quantity, // 数量
                     formatCurrency(subtotal)); // 小計（通貨形式）
         }
+        int total = order.calculateTotalPrice();
+
 
         // 注文内容の区切り線と合計金額の表示
         System.out.println("------------------------------");
