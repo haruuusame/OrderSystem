@@ -13,17 +13,19 @@ public class Order extends OrderBase{
     private static AtomicInteger orderCount = new AtomicInteger(1);
     private final int orderId;
     private final LocalDateTime orderDate;
+    private int status;
 
     // ======= Constructor =======
-    public Order(Map<Integer,OrderLine> itemMap,int orderId,LocalDateTime orderDate) {
+    public Order(Map<Integer,OrderLine> itemMap,int orderId,LocalDateTime orderDate, int status) {
         super(itemMap);
         this.orderId = orderId;
         this.orderDate = orderDate;
+        this.status = status;
     }
 
     public Order(Map<Integer,OrderLine> itemMap) {
         // orderCount,現在時刻(JST)で初期化
-        this(itemMap,orderCount.getAndIncrement(),LocalDateTime.now(ZoneId.of("Asia/Tokyo")));
+        this(itemMap,orderCount.getAndIncrement(),LocalDateTime.now(ZoneId.of("Asia/Tokyo")), 0);
     }
 
     // ======= Getter / Setter =======
@@ -33,5 +35,9 @@ public class Order extends OrderBase{
 
     public LocalDateTime getOrderDate() {
         return orderDate;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
     }
 }

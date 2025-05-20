@@ -44,4 +44,13 @@ public class DBManager{
         MenuCatalog catalog = new MenuCatalog(menus);
         return catalog;
     }
+
+    public boolean registerOrder(Order order){
+        String sql = "INSERT INTO orderHistory(Id, orderId, itemId, quantity, orderTime, status) VALUES (?, ?, ?, ?, ?, ?);";
+        try(
+            PreparedStatement pstmt = con.prepareStatement(sql)
+        ){
+            pstmt.setInt(2,Order.getInt);
+        }
+    }
 }
