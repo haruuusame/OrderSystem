@@ -60,8 +60,8 @@ public class Employee {
             int itemQuantity = line.getQuantity();
             if (menu.getStockQuantity() >= itemQuantity) {
                 menu.getStockQuantity() -= itemQuantity;
-            System.out.printf("%sが%d個注文され残りは%d個です。\n",
-            itemName, itemQuantity, menu.getStockQuantity());
+                System.out.printf("%sが%d個注文され残りは%d個です。\n",
+                itemName, itemQuantity, menu.getStockQuantity());
             }
         }
     }
