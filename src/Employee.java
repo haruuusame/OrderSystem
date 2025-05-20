@@ -39,7 +39,6 @@ public class Employee {
         }
 
         int n = itemNameList.size();
-        totalSales += totalPrice;
         System.out.println("注文履歴");
         for (int i = 0; i < n; i++) {
             System.out.printf("%s | %d | %d\n", 
