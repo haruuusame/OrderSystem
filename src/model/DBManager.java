@@ -213,6 +213,7 @@ public class DBManager{
                     }
                 }
             }
+            rsD.close();
             if(allEq){
                 selectHeaderStmt.setInt(1,orderId);
                 ResultSet rsH = selectHeaderStmt.executeQuery();
@@ -244,6 +245,7 @@ public class DBManager{
         }
     }
 
+    // orderIdに属するすべてのstatusを更新する
     public void updateStatusAll(int orderId, int status) {
         String updateDetailSql = "UPDATE order_detail SET status = ? WHERE orderId = ?";
         String updateHeaderSql = "UPDATE order_header SET status = ? WHERE orderId = ?";
@@ -284,5 +286,4 @@ public class DBManager{
             }
         }
     }
-
 }
