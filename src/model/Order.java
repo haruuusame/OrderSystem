@@ -28,6 +28,14 @@ public class Order extends OrderBase{
         this(itemMap,orderCount.getAndIncrement(),LocalDateTime.now(ZoneId.of("Asia/Tokyo")), 0);
     }
 
+    // Builderでの生成
+    private Order(Builder builder) {
+        super(builder.itemMap);
+        this.orderId = builder.orderId;
+        this.orderDate = builder.orderDate;
+        this.status = builder.status;
+    }
+
     // ======= Getter / Setter =======
     public int getOrderId() {
         return orderId;
@@ -39,5 +47,37 @@ public class Order extends OrderBase{
 
     public void setStatus(int status) {
         this.status = status;
+    }
+
+    // ======= Builder Class =======
+    public static class Builder {
+        private int orderId;
+        private LocalDateTime orderDate = LocalDateTime.now(ZoneId.of("Asia/Tokyo"));
+        private int status = 0;
+        private Map<Integer, OrderLine> itemMap;
+
+        public Builder orderId(int orderId) {
+            this.orderId = orderId;
+            return this;
+        }
+
+        public Builder itemMap(Map<Integer, OrderLine> itemMap) {
+            this.itemMap = itemMap;
+            return this;
+        }
+        
+        public Builder orderDate(LocalDateTime orderDate) {
+            this.orderDate = orderDate;
+            return this;
+        }
+
+        public Builder status(int status) {
+            this.status = status;
+            return this;
+        }
+
+        public Order build() {
+            return new Order(this);
+        }
     }
 }

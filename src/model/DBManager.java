@@ -49,52 +49,82 @@ public class DBManager{
                 String category = rs.getString("category");
                 menus.add(new Menu(itemId,itemName,price,stockQuantity,category));
             }
+            return new MenuCatalog(menus);
         }catch(SQLException e) {
             System.err.println("[エラー] " + e.getMessage());
         }
-        MenuCatalog catalog = new MenuCatalog(menus);
-        return catalog;
+        return null;
     }
 
     // 注文をDBに登録
-    public boolean registerOrder(Order order){
-        boolean isOk = true;
-        String insertSql = "INSERT INTO orderHistory(orderId, itemId, quantity, orderTime, status) VALUES (?, ?, ?, ?, ?);";
-        String updateSql = "UPDATE menu SET stockQuantity = stockQuantity - ? WHERE itemId = ? AND stockQuantity >= ?";
+    public Order registerOrder(Order preOrder){
+        String insertHeaderSql = "INSERT INTO order_header(orderDate,status) VALUES (?, ?)";
+        String insertDetailSql = "INSERT INTO order_detail(orderId,itemId,quantity,status) VALUES (?, ?, ?, ?)";
+        String updateMenuSql = "UPDATE menu SET stockQuantity = stockQuantity - ? WHERE itemId = ? AND stockQuantity >= ?";
         try(
-            PreparedStatement insertStmt = con.prepareStatement(insertSql);
-            PreparedStatement updateStmt = con.prepareStatement(updateSql)
+            PreparedStatement insertHeaderStmt = con.prepareStatement(insertHeaderSql, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement insertDetailStmt = con.prepareStatement(insertDetailSql);
+            PreparedStatement updateMenuStmt = con.prepareStatement(updateMenuSql)
         ){
-            con.setAutoCommit(false);
-            for(OrderLine line:order.asList()) {
-                // 在庫が十分な場合に減算
-                updateStmt.setInt(1, line.getQuantity());
-                updateStmt.setInt(2,line.getMenu().getItemId());
-                updateStmt.setInt(3, line.getQuantity());
-                int updated = updateStmt.executeUpdate();
+            con.setAutoCommit(false); // rollback可能状態へ変更
+            // 注文の概要をheaderテーブルへ追加
+            insertHeaderStmt.setString(1, preOrder.getOrderDate().toString());
+            insertHeaderStmt.setInt(2,0);
+            int registered_header = insertHeaderStmt.executeUpdate();
+
+            // 更新がなされていなければ失敗
+            if(registered_header == 0) {
+                throw new SQLException("注文の登録に失敗しました");
+            }
+
+            ResultSet keys = insertHeaderStmt.getGeneratedKeys();
+            int orderId;
+            if(keys.next()) {
+                orderId = keys.getInt(1);
+            }else{
+                    throw new SQLException("OrderIdの生成に失敗しました");
+            }
+            // 注文の詳細を反映
+
+            for(OrderLine line:preOrder.asList()) {
+                // 在庫が十分な場合にmenuテーブルの在庫数を減算
+                updateMenuStmt.setInt(1, line.getQuantity());
+                updateMenuStmt.setInt(2,line.getMenu().getItemId());
+                updateMenuStmt.setInt(3, line.getQuantity());
+                int updated_menu = updateMenuStmt.executeUpdate();
 
                 // 更新がなされていなければ失敗=在庫不足
-                if (updated == 0) {
+                if (updated_menu == 0) {
                     throw new SQLException("在庫不足:itemId=" + line.getMenu().getItemId());
                 }
 
-                // テーブルへ追加
-                insertStmt.setInt(1,order.getOrderId());
-                insertStmt.setInt(2,line.getMenu().getItemId());
-                insertStmt.setInt(3,line.getQuantity());
-                insertStmt.setString(4,order.getOrderDate().toString());
-                insertStmt.setInt(5,0);
-                insertStmt.executeUpdate();
+                // detailテーブルへ追加
+                insertDetailStmt.setInt(1, orderId);
+                insertDetailStmt.setInt(2,line.getMenu().getItemId());
+                insertDetailStmt.setInt(3,line.getQuantity());
+                insertDetailStmt.setInt(4, 0);
+                int registered_detail = insertDetailStmt.executeUpdate();
+
+                if (registered_detail == 0){
+                    throw new SQLException("注文登録失敗:itemId=" + line.getMenu().getItemId());
+                }
             }
             con.commit();
+
+            return new Order.Builder()
+                    .orderId(orderId)
+                    .orderDate(preOrder.getOrderDate())
+                    .status(0)
+                    .itemMap(preOrder.asMap())
+                    .build();
         }catch(SQLException e){
-            isOk = false;
             try{
                 con.rollback();
                 System.err.println("[ロールバック]" + e.getMessage());
             } catch (SQLException rollbackEx) {
                 System.err.println("[ロールバック失敗]" + rollbackEx.getMessage());
             }
+            return null;
         }finally{
             try{
                 con.setAutoCommit(true);
@@ -102,19 +132,18 @@ public class DBManager{
                 System.out.println("[エラー]"+e.getMessage());
             }
         }
-        return isOk;
     }
 
     // 在庫補充をDBに反映
     public boolean restockMenuItem(int itemId, int quantity){
         boolean isOk = true;
-        String sql = "UPDATE menu set stockQuantity = stockQuantity + ? WHERE itemId = ?";
+        String updateMenuSql = "UPDATE menu set stockQuantity = stockQuantity + ? WHERE itemId = ?";
         try(
-            PreparedStatement pstmt = con.prepareStatement(sql)
+            PreparedStatement updateMenuStmt = con.prepareStatement(updateMenuSql)
         ){
-            pstmt.setInt(1,quantity);
-            pstmt.setInt(2,itemId);
-            int updated = pstmt.executeUpdate();
+            updateMenuStmt.setInt(1,quantity);
+            updateMenuStmt.setInt(2,itemId);
+            int updated = updateMenuStmt.executeUpdate();
 
             if (updated == 0) {
                 throw new SQLException("商品が見つかりません:itemId=" + itemId);
@@ -129,7 +158,7 @@ public class DBManager{
 
     // メニューを新規作成
     public Menu addNewMenuItem(String itemName,int price,int stockQuantity,String category){
-        String sql = "INSERT INTO menu(itemName, price, stockQuantity, category) VALUES (?, ?, ?, ?);";
+        String sql = "INSERT INTO menu(itemName, price, stockQuantity, category) VALUES (?, ?, ?, ?)";
         try(
             PreparedStatement pstmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)
         ){
@@ -154,16 +183,106 @@ public class DBManager{
 
     // ステータスを更新
     public void updateStatus(int orderId,int itemId,int status){
-        String sql = "UPDATE orderHistory SET status = ? WHERE orderId = ? AND itemId = ?";
+        String updateDetailSql = "UPDATE order_detail SET status = ? WHERE orderId = ? AND itemId = ?";
+        String selectDetailSql = "SELECT status FROM order_detail WHERE orderId = ?";
+        String selectHeaderSql = "SELECT status FROM order_header WHERE orderId = ?";
+        String updateHeaderSql = "UPDATE order_header SET status = ? WHERE orderId = ?";
         try(
-            PreparedStatement pstmt = con.prepareStatement(sql);
+            PreparedStatement updateDetailStmt = con.prepareStatement(updateDetailSql);
+            PreparedStatement selectDetailStmt = con.prepareStatement(selectDetailSql);
+            PreparedStatement selectHeaderStmt = con.prepareStatement(selectHeaderSql);
+            PreparedStatement updateHeaderStmt = con.prepareStatement(updateHeaderSql)
         ){
-            pstmt.setInt(1,status);
-            pstmt.setInt(2,orderId);
-            pstmt.setInt(3,itemId);
-            pstmt.executeUpdate();
+            con.setAutoCommit(false); // rollback可能状態へ変更
+            updateDetailStmt.setInt(1,status);
+            updateDetailStmt.setInt(2,orderId);
+            updateDetailStmt.setInt(3,itemId);
+            updateDetailStmt.executeUpdate();
+
+            selectDetailStmt.setInt(1,orderId);
+            ResultSet rsD = selectDetailStmt.executeQuery();
+
+            boolean allEq = true;
+            int rs_start=0;
+            if(rsD.next()){
+                rs_start = rsD.getInt("status");
+                while(rsD.next()){
+                    if(rs_start != rsD.getInt("status")){
+                        allEq = false;
+                        break;
+                    }
+                }
+            }
+            if(allEq){
+                selectHeaderStmt.setInt(1,orderId);
+                ResultSet rsH = selectHeaderStmt.executeQuery();
+                if(rsH.next()){
+                    int rsH_status = rsH.getInt("status");
+                    int rsD_status = rs_start;
+                    // Headerのstatusが古かったら更新する
+                    if(rsH_status < rsD_status){
+                        updateHeaderStmt.setInt(1,rsD_status);
+                        updateHeaderStmt.setInt(2,orderId);
+                        updateHeaderStmt.executeUpdate();
+                    }
+                }
+            }
         }catch(SQLException e){
+            try{
+                con.rollback();
+                System.err.println("[ロールバック]" + e.getMessage());
+            } catch (SQLException rollbackEx) {
+                System.err.println("[ロールバック失敗]" + rollbackEx.getMessage());
+            }
             System.err.println("[エラー]:"+e.getMessage());
+        }finally{
+            try{
+                con.setAutoCommit(true);
+            }catch(SQLException e) {
+                System.out.println("[エラー]"+e.getMessage());
+            }
         }
     }
+
+    public void updateStatusAll(int orderId, int status) {
+        String updateDetailSql = "UPDATE order_detail SET status = ? WHERE orderId = ?";
+        String updateHeaderSql = "UPDATE order_header SET status = ? WHERE orderId = ?";
+        try (
+            PreparedStatement updateDetailStmt = con.prepareStatement(updateDetailSql);
+            PreparedStatement updateHeaderStmt = con.prepareStatement(updateHeaderSql)
+        ) {
+            con.setAutoCommit(false);
+
+            // 明細すべてのステータスを更新
+            updateDetailStmt.setInt(1, status);
+            updateDetailStmt.setInt(2, orderId);
+            int updatedDetailRows = updateDetailStmt.executeUpdate();
+
+            if (updatedDetailRows == 0) {
+                throw new SQLException("明細ステータスの更新に失敗しました（対象が存在しない可能性）");
+            }
+
+            // ヘッダーのステータスも更新
+            updateHeaderStmt.setInt(1, status);
+            updateHeaderStmt.setInt(2, orderId);
+            updateHeaderStmt.executeUpdate();
+
+            con.commit();
+        } catch (SQLException e) {
+            try {
+                con.rollback();
+                System.err.println("[ロールバック] " + e.getMessage());
+            } catch (SQLException rollbackEx) {
+                System.err.println("[ロールバック失敗] " + rollbackEx.getMessage());
+            }
+            System.err.println("[エラー] " + e.getMessage());
+        } finally {
+            try {
+                con.setAutoCommit(true);
+            } catch (SQLException e) {
+                System.err.println("[エラー] " + e.getMessage());
+            }
+        }
+    }
+
 }
