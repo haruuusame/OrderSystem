@@ -107,12 +107,15 @@ public class Cart extends OrderBase {
             // 5) Order生成
             Order order = new Order(Collections.unmodifiableMap(orderItem));
 
-            // 6) カートを空にする
+            // 6) DBに登録
+            
+
+            // 7) カートを空にする
             clearCart();
 
             return Optional.of(order);
         } catch (RuntimeException ex) {
-            // 7) 例外が発生した場合、一部在庫が引き落とされた可能性があるため、ロールバックを行う
+            // 6) 例外が発生した場合、一部在庫が引き落とされた可能性があるため、ロールバックを行う
             for (OrderLine ci : deducted) {
                 Menu m = ci.getMenu();
                 m.setStockQuantity(m.getStockQuantity() + ci.getQuantity());

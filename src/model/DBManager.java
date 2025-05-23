@@ -184,57 +184,15 @@ public class DBManager{
     // ステータスを更新
     public void updateStatus(int orderId,int itemId,int status){
         String updateDetailSql = "UPDATE order_detail SET status = ? WHERE orderId = ? AND itemId = ?";
-        String selectDetailSql = "SELECT status FROM order_detail WHERE orderId = ?";
-        String selectHeaderSql = "SELECT status FROM order_header WHERE orderId = ?";
-        String updateHeaderSql = "UPDATE order_header SET status = ? WHERE orderId = ?";
         try(
-            PreparedStatement updateDetailStmt = con.prepareStatement(updateDetailSql);
-            PreparedStatement selectDetailStmt = con.prepareStatement(selectDetailSql);
-            PreparedStatement selectHeaderStmt = con.prepareStatement(selectHeaderSql);
-            PreparedStatement updateHeaderStmt = con.prepareStatement(updateHeaderSql)
+            PreparedStatement updateDetailStmt = con.prepareStatement(updateDetailSql)
         ){
-            con.setAutoCommit(false); // rollback可能状態へ変更
             updateDetailStmt.setInt(1,status);
             updateDetailStmt.setInt(2,orderId);
             updateDetailStmt.setInt(3,itemId);
             updateDetailStmt.executeUpdate();
-
-            selectDetailStmt.setInt(1,orderId);
-            ResultSet rsD = selectDetailStmt.executeQuery();
-
-            boolean allEq = true;
-            int rs_start=0;
-            if(rsD.next()){
-                rs_start = rsD.getInt("status");
-                while(rsD.next()){
-                    if(rs_start != rsD.getInt("status")){
-                        allEq = false;
-                        break;
-                    }
-                }
-            }
-            rsD.close();
-            if(allEq){
-                selectHeaderStmt.setInt(1,orderId);
-                ResultSet rsH = selectHeaderStmt.executeQuery();
-                if(rsH.next()){
-                    int rsH_status = rsH.getInt("status");
-                    int rsD_status = rs_start;
-                    // Headerのstatusが古かったら更新する
-                    if(rsH_status < rsD_status){
-                        updateHeaderStmt.setInt(1,rsD_status);
-                        updateHeaderStmt.setInt(2,orderId);
-                        updateHeaderStmt.executeUpdate();
-                    }
-                }
-            }
+            
         }catch(SQLException e){
-            try{
-                con.rollback();
-                System.err.println("[ロールバック]" + e.getMessage());
-            } catch (SQLException rollbackEx) {
-                System.err.println("[ロールバック失敗]" + rollbackEx.getMessage());
-            }
             System.err.println("[エラー]:"+e.getMessage());
         }finally{
             try{
