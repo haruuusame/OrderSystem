@@ -24,7 +24,6 @@ public abstract class OrderBase {
     }
 
     // ======= Method =======
-
     // `itemMap`を`unmodifiableMap`にして返す
     public Map<Integer, OrderLine> asMap() {
         return Collections.unmodifiableMap(itemMap);
@@ -34,7 +33,6 @@ public abstract class OrderBase {
     public List<OrderLine> asList() {
         return List.copyOf(itemMap.values());
     }
-
     // リスト内の合計金額を返す
     public int calculateTotalPrice() {
         return itemMap.values().stream().mapToInt(ci -> ci.getMenu().getPrice() * ci.getQuantity()).sum();
