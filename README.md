@@ -142,3 +142,5 @@ git add -A   #削除含む全作業
 ## Gitに含めないファイル(`.gitignore`)
 - `*.class`など、コンパイルで生成されるファイル
 - `.DS_Store`など、OS依存ファイル
+
+konnitiha
