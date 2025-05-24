@@ -2,6 +2,9 @@ package model;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 /**
@@ -45,7 +48,12 @@ public class Order extends OrderBase{
         return orderDate;
     }
 
+    public int getStatus() {
+        return status;
+    }
+
     public void setStatus(int status) {
+        if (status < 0 || status > 3) throw new IllegalArgumentException("不正なstatusです");
         this.status = status;
     }
 
@@ -54,7 +62,7 @@ public class Order extends OrderBase{
         private int orderId;
         private LocalDateTime orderDate = LocalDateTime.now(ZoneId.of("Asia/Tokyo"));
         private int status = 0;
-        private Map<Integer, OrderLine> itemMap;
+        private Map<Integer, OrderLine> itemMap = new LinkedHashMap<>();
 
         public Builder orderId(int orderId) {
             this.orderId = orderId;
@@ -79,5 +87,31 @@ public class Order extends OrderBase{
         public Order build() {
             return new Order(this);
         }
+
+        public Builder add(OrderLine ol) {
+            this.itemMap.put(ol.getMenu().getItemId(), ol);
+            return this;
+        }
+
+        public int getOrderId() {
+            return orderId;
+        }
+
+        public Map<Integer, OrderLine> asMap(){
+            return Collections.unmodifiableMap(itemMap);
+        }
+
+        public List<OrderLine> asList() {
+            return List.copyOf(itemMap.values());
+        }
+
+        public LocalDateTime getOrderDate() {
+            return orderDate;
+        }
+
+        public int getStatus() {
+            return status;
+        }
+
     }
 }

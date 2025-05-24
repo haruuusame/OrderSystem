@@ -1,12 +1,18 @@
 package controller.cli;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import model.Cart;
+import model.DBManager;
 import model.Menu;
 import model.MenuCatalog;
 import model.Order;
+import model.OrderLine;
 /**
  * PurchaseViewと他のクラスの間の手続きを行うクラス。
  */
@@ -16,12 +22,14 @@ public class OrderSessionController {
     private Cart cart;
     private MenuCatalog filteredCatalog;
     private MenuCatalog fullCatalog; // DBの代わりに一時的に実装
+    private DBManager dbm;
     
     // ======= Constructor =======
     public OrderSessionController(int cartId,MenuCatalog fullCatalog) {
         this.cart = new Cart(cartId);
         this.fullCatalog = fullCatalog;
         this.filteredCatalog = fullCatalog;
+        this.dbm = new DBManager("TestMenu.db");
     }
 
     // ======= Method =======
@@ -34,9 +42,33 @@ public class OrderSessionController {
     }
 
     // Viewから受け取ったチェックアウト処理をCartクラスで実行する
-    public Optional<Order> checkout() {
+    public Optional<Order> checkout2() {
         Optional<Order> checkout = cart.checkout();
         return checkout;
+    }
+
+    public Optional<Order> checkout() {
+        // 1) カートが空でないかチェック
+        if(cart.isEmpty()) return Optional.empty();
+
+        // 2) その時点でのMenu情報でOrderを生成(itemMapをdeepcopy)
+        Map<Integer, OrderLine> orderItem = new LinkedHashMap<>();
+        cart.asMap().forEach((id, ci) -> orderItem.put(id, ci.deepcopy()));
+
+        // 3) Orderのビルダー生成
+        Order.Builder preOrder = new Order.Builder()
+            .itemMap(Collections.unmodifiableMap(orderItem))
+            .status(0);
+
+        // 4) DBアクセス
+        Optional<Order> opOrder =  dbm.registerOrder(preOrder);
+
+        // 5) カートを空にする
+        if(opOrder.isPresent()){
+            cart.clearCart();
+        }
+
+        return opOrder;
     }
 
     // Viewから受け取ったカート変更処理をCartクラスで実行する
@@ -55,6 +87,17 @@ public class OrderSessionController {
     // カタログをリセット
     public void resetCatalog(){
         this.filteredCatalog = fullCatalog;
+    }
+
+    // カタログをフェッチ
+    public void fetchCatalog(){
+        Optional<MenuCatalog> opCatalog = dbm.createMenuCatalogAll();
+        if(opCatalog.isPresent()){
+            this.fullCatalog = opCatalog.get();
+        }else{
+            System.err.println("[エラー] カタログの取得に失敗");
+        }
+        resetCatalog();
     }
 
     // メニューリストを返す
