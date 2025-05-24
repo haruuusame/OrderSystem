@@ -1,6 +1,5 @@
 package controller.cli;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,11 +24,12 @@ public class OrderSessionController {
     private DBManager dbm;
     
     // ======= Constructor =======
-    public OrderSessionController(int cartId,MenuCatalog fullCatalog) {
+    public OrderSessionController(int cartId,String dbname) {
         this.cart = new Cart(cartId);
-        this.fullCatalog = fullCatalog;
-        this.filteredCatalog = fullCatalog;
-        this.dbm = new DBManager("TestMenu.db");
+        this.dbm = new DBManager(dbname);
+        dbm.connect();
+        this.fullCatalog = dbm.createMenuCatalogAll().get();
+        this.filteredCatalog = this.fullCatalog;
     }
 
     // ======= Method =======
@@ -42,11 +42,6 @@ public class OrderSessionController {
     }
 
     // Viewから受け取ったチェックアウト処理をCartクラスで実行する
-    public Optional<Order> checkout2() {
-        Optional<Order> checkout = cart.checkout();
-        return checkout;
-    }
-
     public Optional<Order> checkout() {
         // 1) カートが空でないかチェック
         if(cart.isEmpty()) return Optional.empty();

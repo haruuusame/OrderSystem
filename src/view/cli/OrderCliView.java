@@ -44,6 +44,8 @@ public class OrderCliView {
 
     // 画面を呼び出すメソッド
     public void showMain() {
+        // カタログフェッチ
+        sessionController.fetchCatalog();
         // 初回に描画する
         ConsoleUtil.showHeader("OrderSystem");
         showMenuList();   
