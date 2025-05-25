@@ -1,6 +1,7 @@
 package model;
 
 import java.sql.*;
+
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 public class DBManager{
     private String URL;
     public Connection con = null;
+
     public DBManager(String filename){
         String baseDir = System.getProperty("user.dir");
         URL = "jdbc:sqlite:" + baseDir + "/data/" + filename;
@@ -61,8 +63,8 @@ public class DBManager{
             return Optional.of(new MenuCatalog(menus));
         }catch(SQLException e) {
             System.err.println("[エラー] " + e.getMessage());
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     // カテゴリ指定でカタログ取得

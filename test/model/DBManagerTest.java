@@ -94,6 +94,7 @@ public class DBManagerTest {
         assertTrue(db.restockMenuItem(friesId, 5));
         Menu updated = db.fetchMenuById(friesId).get();
         assertEquals(before + 5, updated.getStockQuantity());
+
     }
 
     @Test
@@ -180,8 +181,7 @@ public class DBManagerTest {
     }
     @Test
     public void testFetchOrdersByStatusAndDateTimeNoResult() {
-        assertEquals(0, db.fetchOrdersByStatusAndDateTime(
-            999, LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.of(2000, 1, 2, 0, 0)).size());
+        assertEquals(0, db.fetchOrdersByStatusAndDateTime(999, LocalDateTime.of(2000, 1, 1, 0, 0), LocalDateTime.of(2000, 1, 2, 0, 0)).size());
     }
     @Test
     public void testOperationAfterDisconnect() {
