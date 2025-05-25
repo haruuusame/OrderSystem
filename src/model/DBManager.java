@@ -272,6 +272,10 @@ public class DBManager{
         String insertDetailSql = "INSERT INTO order_detail(orderId,itemId,quantity,status) VALUES (?, ?, ?, ?)";
         String updateMenuSql = "UPDATE menu SET stockQuantity = stockQuantity - ? WHERE itemId = ? AND stockQuantity >= ?";
         LocalDateTime orderdDateTime = LocalDateTime.now(ZoneId.of("Asia/Tokyo"));
+        if (preOrder.asList().isEmpty()) {
+            System.err.println("[エラー] 注文が空です");
+            return Optional.empty(); // 注文が空の時失敗
+        }
         try(
             PreparedStatement insertHeaderStmt = con.prepareStatement(insertHeaderSql, Statement.RETURN_GENERATED_KEYS);
             PreparedStatement insertDetailStmt = con.prepareStatement(insertDetailSql);
