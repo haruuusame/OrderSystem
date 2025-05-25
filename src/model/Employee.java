@@ -1,14 +1,17 @@
+package model;
+
 import java.util.ArrayList;
-import model.Menu;
-import model.Order;
-import model.OrderLine;
-import model.DBManager;
+import java.util.List;
+import java.util.Optional;
 
 public class Employee {
     ArrayList<String> itemNameList = new ArrayList<>();
     ArrayList<Integer> itemPriceList = new ArrayList<>();
     ArrayList<Integer> itemQuantityList = new ArrayList<>();
     int totalSales = 0;
+
+    public Employee(DBManager dbm) {
+    }
 
     public static void showOrder(int orderId, DBManager dbm) {
         Optional<Order> opOrder = dbm.fetchOrderById(orderId);
@@ -28,7 +31,7 @@ public class Employee {
         System.out.printf("お客様番号：%d\n", order.getOrderId());
         System.out.println("注文日時：" + order.getOrderDate());
         System.out.printf("ステータス：%s\n", convert(order.getStatus()));
-        System.out.println("商品名 | 金額 | 個数");
+        System.out.printf("%s | %s | %s\n", "商品名", "金額", "個数");
         for (OrderLine line : order.asList()) {
             String itemName = line.getMenu().getItemName();
             int itemPrice = line.getMenu().getPrice();
