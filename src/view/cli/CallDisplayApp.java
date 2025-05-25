@@ -22,10 +22,10 @@ public class CallDisplayApp {
                 ConsoleUtil.clearScreen();
 
                 // お待ち番号（status = 0）を取得
-                List<Order> waitingOrders = dbManager.fetchOrdersByStatus(1);
+                List<Order> waitingOrders = dbManager.fetchOrdersByStatus(0);
 
                 // 呼び出し番号（status = 2）を取得
-                List<Order> calledOrders = dbManager.fetchOrdersByStatus(2);
+                List<Order> calledOrders = dbManager.fetchOrdersByStatus(1);
 
                 // 表示
                 System.out.println("====================================");
