@@ -27,6 +27,7 @@ public class Employee {
         System.out.println("注文内容確認");
         System.out.printf("お客様番号：%d\n", order.getOrderId());
         System.out.println("注文日時：" + order.getOrderDate());
+        System.out.printf("ステータス：%s\n", convert(order.getStatus()));
         System.out.println("商品名 | 金額 | 個数");
         for (OrderLine line : order.asList()) {
             String itemName = line.getMenu().getItemName();
@@ -66,10 +67,10 @@ public class Employee {
 
     public static void updateOrderStatus(int orderId, int status, DBManager dbm) {
         dbm.updateStatusAll(orderId, status);
-        System.out.printf("注文ID%dのステータスを%dに変更しました。\n",orderId, status);
+        System.out.printf("注文ID%dのステータスを%d:%sに変更しました。\n",orderId,status,convert(status));
     }
 
-    public static String convertIntegerIntoString(int status) {
+    public static String convert(int status) {
         String statusString;
         switch(status) {
             case 0 : statusString = "処理中"; break;
