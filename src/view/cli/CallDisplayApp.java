@@ -24,7 +24,7 @@ public class CallDisplayApp {
                 // お待ち番号（status = 0）を取得
                 List<Order> waitingOrders = dbManager.fetchOrdersByStatus(0);
 
-                // 呼び出し番号（status = 2）を取得
+                // 呼び出し番号（status = 1）を取得
                 List<Order> calledOrders = dbManager.fetchOrdersByStatus(1);
 
                 // 表示
