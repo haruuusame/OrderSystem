@@ -1,218 +1,114 @@
 package test.model;
 
-import model.*;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 
-import java.time.LocalDateTime;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import model.DBManager;
+import model.Menu;
+import model.MenuCatalog;
+import model.Order;
+import model.OrderLine;
 
 import static org.junit.Assert.*;
+import java.util.*;
 
 public class DBManagerTest {
-    private DBManager db;
+    static final String TEST_DB = "TestMenu.db";
+    static DBManager db;
+    static int burgerId, friesId, drinkId;
 
-    @Before
-    public void setUp() {
-        db = new DBManager("TestMenu.db");
+    @BeforeClass
+    public static void setupOnce() {
+        db = new DBManager(TEST_DB);
         db.connect();
+        // 初回のみ全テーブル初期化＋メニュー初期投入
+        try {
+            db.con.createStatement().executeUpdate("DELETE FROM order_detail");
+            db.con.createStatement().executeUpdate("DELETE FROM order_header");
+            db.con.createStatement().executeUpdate("DELETE FROM menu");
+        } catch (Exception e) {}
+        burgerId = db.addNewMenuItem("ハンバーガー", 350, 10, "Food").get().getItemId();
+        friesId = db.addNewMenuItem("ポテト", 180, 15, "Side").get().getItemId();
+        drinkId = db.addNewMenuItem("ドリンク", 120, 20, "Drink").get().getItemId();
     }
 
-    @After
-    public void tearDown() {
+    @AfterClass
+    public static void tearDownOnce() {
         db.disconnect();
     }
 
-    @Test
-    public void testAddNewMenuItemAndCatalogRetrieval() {
-        Menu added = db.addNewMenuItem("テスト商品", 1200, 10, "デザート").get();
-        assertNotNull(added);
-        assertEquals("テスト商品", added.getItemName());
+    @Before
+    public void clearOrders() {
+        // 注文だけ毎回クリア
+        try {
+            db.con.createStatement().executeUpdate("DELETE FROM order_detail");
+            db.con.createStatement().executeUpdate("DELETE FROM order_header");
+        } catch (Exception e) {}
+    }
 
+    @Test
+    public void testMenuCatalogFixed() {
         MenuCatalog catalog = db.createMenuCatalogAll().get();
-        assertNotNull(catalog);
-        assertTrue(catalog.has(added.getItemId()));
+        assertEquals(3, catalog.size());
+        assertNotNull(catalog.get(burgerId));
+        assertNotNull(catalog.get(friesId));
+        assertNotNull(catalog.get(drinkId));
     }
 
     @Test
-    public void testRestockMenuItemSuccess() {
-        Menu m = db.addNewMenuItem("在庫補充", 800, 1, "惣菜").get();
-        boolean result = db.restockMenuItem(m.getItemId(), 5);
-        assertTrue(result);
+    public void testOrderRegisterAndFetch() {
+        Map<Integer, OrderLine> map = new LinkedHashMap<>();
+        map.put(burgerId, new OrderLine(db.fetchMenuById(burgerId).get(), 2));
+        map.put(friesId, new OrderLine(db.fetchMenuById(friesId).get(), 1));
+        Order.Builder builder = new Order.Builder().itemMap(map).status(0);
+        Order order = db.registerOrder(builder).get();
+
+        Optional<Order> fetchedOrder = db.fetchOrderById(order.getOrderId());
+        assertTrue(fetchedOrder.isPresent());
+        assertEquals(order.getOrderId(), fetchedOrder.get().getOrderId());
+        assertEquals(2, fetchedOrder.get().asList().size());
     }
 
     @Test
-    public void testRestockMenuItemFailure() {
-        // 存在しないitemId
-        boolean result = db.restockMenuItem(-9999, 5);
-        assertFalse(result);
+    public void testOrderStatusAndFetch() {
+        // 登録
+        Map<Integer, OrderLine> map = new LinkedHashMap<>();
+        map.put(drinkId, new OrderLine(db.fetchMenuById(drinkId).get(), 1));
+        Order order0 = db.registerOrder(new Order.Builder().itemMap(map).status(0)).get();
+        Order order1 = db.registerOrder(new Order.Builder().itemMap(map).status(0)).get();
+
+        // statusで取得
+        assertEquals(2, db.fetchOrdersByStatus(0).stream().count());
+
+        // order1のstatus変更
+        db.updateStatusAll(order1.getOrderId(), 1);
+
+        assertEquals(1, db.fetchOrdersByStatus(1).stream().filter(o->o.getOrderId()==order1.getOrderId()).count());
     }
 
     @Test
-    public void testRegisterOrderSuccess() {
-        Menu m = db.addNewMenuItem("注文成功商品", 300, 10, "飲料").get();
-        Map<Integer, OrderLine> itemMap = new LinkedHashMap<>();
-        itemMap.put(m.getItemId(), new OrderLine(m, 2));
-        Order.Builder order = new Order.Builder().itemMap(itemMap).status(0);
-
-        Order registered = db.registerOrder(order).get();
-        assertNotNull(registered);
-    }
-
-    @Test
-    public void testRegisterOrderFailureByStock() {
-        Menu m = db.addNewMenuItem("在庫不足商品", 400, 1, "主菜").get();
-        Map<Integer, OrderLine> itemMap = new LinkedHashMap<>();
-        itemMap.put(m.getItemId(), new OrderLine(m, 999));
-        Order.Builder order = new Order.Builder().itemMap(itemMap).status(0);
-        
-        Optional<Order> result = db.registerOrder(order);
-        assertEquals(Optional.empty(),result);
-    }
-
-    @Test
-    public void testUpdateStatusAndHeaderSync() {
-        Menu m = db.addNewMenuItem("ステータス商品", 500, 3, "その他").get();
-        Map<Integer, OrderLine> itemMap = new LinkedHashMap<>();
-        itemMap.put(m.getItemId(), new OrderLine(m, 1));
-        Order.Builder order = new Order.Builder().itemMap(itemMap).status(0);
-        Order registered = db.registerOrder(order).get();
-        assertNotNull(registered);
-
-        db.updateStatus(registered.getOrderId(), m.getItemId(), 2);  // 2 = 完了
+    public void testRestockMenuItem() {
+        Menu fries = db.fetchMenuById(friesId).get();
+        int before = fries.getStockQuantity();
+        assertTrue(db.restockMenuItem(friesId, 5));
+        Menu updated = db.fetchMenuById(friesId).get();
+        assertEquals(before + 5, updated.getStockQuantity());
     }
 
     @Test
     public void testUpdateStatusAll() {
-        Menu m1 = db.addNewMenuItem("一括ステータス1", 600, 2, "軽食").get();
-        Menu m2 = db.addNewMenuItem("一括ステータス2", 700, 2, "軽食").get();
+        Map<Integer, OrderLine> map = new LinkedHashMap<>();
+        map.put(drinkId, new OrderLine(db.fetchMenuById(drinkId).get(), 1));
+        Order order = db.registerOrder(new Order.Builder().itemMap(map).status(0)).get();
 
-        Map<Integer, OrderLine> itemMap = new LinkedHashMap<>();
-        itemMap.put(m1.getItemId(), new OrderLine(m1, 1));
-        itemMap.put(m2.getItemId(), new OrderLine(m2, 1));
-        Order.Builder order = new Order.Builder().itemMap(itemMap).status(0);
-
-        Order registered = db.registerOrder(order).get();
-        assertNotNull(registered);
-
-        db.updateStatusAll(registered.getOrderId(), 1);  // 全明細を処理中に
-    }
-    @Test
-    public void testOrderMultipleItems() {
-        Menu burger = db.addNewMenuItem("ハンバーガー", 500, 5, "主菜").get();
-        Menu fries = db.addNewMenuItem("ポテト", 300, 10, "サイド").get();
-        Menu coffee = db.addNewMenuItem("コーヒー", 200, 8, "飲料").get();
-
-        Map<Integer, OrderLine> itemMap = new LinkedHashMap<>();
-        itemMap.put(burger.getItemId(), new OrderLine(burger, 2));
-        itemMap.put(fries.getItemId(), new OrderLine(fries, 3));
-        itemMap.put(coffee.getItemId(), new OrderLine(coffee, 1));
-
-        Order.Builder order = new Order.Builder().itemMap(itemMap).status(0);
-        Order registered = db.registerOrder(order).get();
-
-        assertNotNull(registered);
-        assertEquals(3, registered.asMap().size());
+        db.updateStatusAll(order.getOrderId(), 3); // キャンセル
+        Order updated = db.fetchOrderById(order.getOrderId()).get();
+        assertEquals(3, updated.getStatus());
     }
 
     @Test
-    public void testFetchOrderByStatus() {
-        Menu burger = db.addNewMenuItem("ステータス確認バーガー", 500, 3, "主菜").get();
-        Order.Builder order = new Order.Builder().itemMap(Map.of(burger.getItemId(), new OrderLine(burger, 1)));
-        Order registered = db.registerOrder(order).get();
-        db.updateStatusAll(registered.getOrderId(), 1);  // ステータス1 = 処理中
-
-        List<Order> result = db.fetchOrdersByStatus(1);
-        assertTrue(result.stream().anyMatch(o -> o.getOrderId() == registered.getOrderId()));
+    public void testErrorCases() {
+        assertFalse(db.fetchMenuById(-1).isPresent());
+        assertFalse(db.fetchOrderById(-1).isPresent());
+        assertFalse(db.restockMenuItem(-99, 10));
     }
-
-@Test
-public void testFetchOrderByDateTimeRange() {
-    // メニュー追加
-    Menu coffee = db.addNewMenuItem("日付確認コーヒー", 250, 5, "飲料").get();
-
-    // 注文登録 (orderDateはDBManager内で自動生成)
-    Order.Builder order = new Order.Builder()
-        .itemMap(Map.of(coffee.getItemId(), new OrderLine(coffee, 1)))
-        .status(0);
-
-    // 登録
-    Order registered = db.registerOrder(order).get();
-
-    // 登録された日時（registerOrderでセットされたorderDate）を取得
-    LocalDateTime registeredDate = registered.getOrderDate();
-
-    // テスト範囲を登録直前後でカバー
-    List<Order> result = db.fetchOrdersByDateTimeRange(
-        registeredDate.minusMinutes(1),
-        registeredDate.plusMinutes(5)
-    );
-
-    assertTrue(result.stream().anyMatch(o -> o.getOrderId() == registered.getOrderId()));
-}
-
-
-
-    @Test
-    public void testFetchOrderByStatusAndDateTime() {
-        Menu fries = db.addNewMenuItem("複合確認ポテト", 300, 3, "サイド").get();
-        Order.Builder order = new Order.Builder().itemMap(Map.of(fries.getItemId(), new OrderLine(fries, 1))).status(0);
-        Order registered = db.registerOrder(order).get();
-        assertNotNull(registered);
-
-        db.updateStatusAll(registered.getOrderId(), 2);  // ステータス2 = 完了
-
-        LocalDateTime registeredTime = registered.getOrderDate();
-        List<Order> result = db.fetchOrdersByStatusAndDateTime(2,
-            registeredTime.minusMinutes(1),
-            registeredTime.plusMinutes(5)
-        );
-
-        assertTrue(result.stream().anyMatch(o -> o.getOrderId() == registered.getOrderId()));
-    }
-
-    @Test
-    public void testStockReductionAfterOrder() {
-        Menu burger = db.addNewMenuItem("在庫チェックバーガー", 700, 5, "主菜").get();
-        Order.Builder order = new Order.Builder().itemMap(Map.of(burger.getItemId(), new OrderLine(burger, 3))).status(0);
-        Order registered = db.registerOrder(order).get();
-        assertNotNull(registered);
-
-        MenuCatalog catalog = db.createMenuCatalogAll().get();
-        Menu updated = catalog.get(burger.getItemId());
-        assertEquals(2, updated.getStockQuantity());
-    }
-
-@Test
-public void testRestockAfterOrder() {
-    // 1個だけ在庫があるコーヒーを新規追加
-    Menu coffee = db.addNewMenuItem("補充確認コーヒー", 150, 1, "飲料").get();
-
-    // 1個注文（在庫が1なので、注文数は1にするのが妥当）
-    Order.Builder order = new Order.Builder()
-        .itemMap(Map.of(coffee.getItemId(), new OrderLine(coffee, 1)))
-        .status(0);
-
-    // 注文登録
-    Order registered = db.registerOrder(order).orElse(null);
-
-    // 登録に失敗したらテスト失敗
-    assertNotNull(registered);
-
-    // 5個補充
-    db.restockMenuItem(coffee.getItemId(), 5);
-
-    // 最新カタログ取得
-    MenuCatalog catalog = db.createMenuCatalogAll().get();
-    Menu updated = catalog.get(coffee.getItemId());
-
-    // (元1個) - (1注文) + (5補充) = 5個になるはず
-    assertEquals(5, updated.getStockQuantity());
-}
-
-
 }

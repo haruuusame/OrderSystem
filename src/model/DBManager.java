@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class DBManager{
     private String URL;
-    private Connection con = null;
+    public Connection con = null;
     public DBManager(String filename){
         String baseDir = System.getProperty("user.dir");
         URL = "jdbc:sqlite:" + baseDir + "/data/" + filename;
@@ -243,6 +243,10 @@ public class DBManager{
             System.err.println("[エラー] "+e.getMessage());
             return List.of();
         }
+    }
+    // すべての注文を取得
+    public List<Order> fetchOrdersAll(){
+        return fetchOrders("1 = 1", List.of());
     }
 
     // ステータスから注文を取得

@@ -1,70 +1,67 @@
 package test.controller.cli;
 
 import static org.junit.Assert.*;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.*;
 import controller.cli.OrderSessionController;
-import model.Cart;
-import model.Menu;
-import model.MenuCatalog;
-import model.Order;
-import model.OrderLine;
+import model.*;
+
+import java.util.*;
 
 public class OrderSessionControllerTest {
+    private static final String TEST_DB = "TestMenu.db";
+    private static DBManager db;
+    private static int burgerId, potatoId, drinkId;
 
-    private List<Menu> menus;
-    private Cart cart;
-    private OrderSessionController controller;
-
-    // ===== Helper =====
-    public OrderSessionController dummyController() {
-        cart = new Cart(1);
-        menus = new ArrayList<>();
-        menus.add(new Menu(1, "menu1", 400, 10, "Food"));
-        menus.add(new Menu(2, "menu2", 300, 5, "Drink"));
-        menus.add(new Menu(3, "menu3", 300, 15, "Side"));
-        MenuCatalog catalog = new MenuCatalog(menus);
-        return new OrderSessionController(1, catalog);
+    @BeforeClass
+    public static void setupDB() {
+        db = new DBManager(TEST_DB);
+        db.connect();
+        // 必ずクリーンアップ
+        try {
+            db.con.createStatement().executeUpdate("DELETE FROM order_detail");
+            db.con.createStatement().executeUpdate("DELETE FROM order_header");
+            db.con.createStatement().executeUpdate("DELETE FROM menu");
+        } catch(Exception e) { throw new AssertionError(e); }
+        // テスト用メニューを追加
+        burgerId = db.addNewMenuItem("バーガー", 400, 10, "Food").get().getItemId();
+        potatoId = db.addNewMenuItem("ポテト", 300, 15, "Side").get().getItemId();
+        drinkId = db.addNewMenuItem("ドリンク", 200, 20, "Drink").get().getItemId();
     }
+
+    private OrderSessionController controller;
 
     @Before
     public void setUp() {
-        controller = dummyController();
+        controller = new OrderSessionController(1, TEST_DB);
     }
-
-    // ===== Tests =====
 
     @Test
     public void addCartWorks() {
-        boolean result = controller.addCart(1, 2);
+        boolean result = controller.addCart(burgerId, 2);
         assertTrue(result);
         List<OrderLine> lines = controller.getCart().asList();
         assertEquals(1, lines.size());
         assertEquals(2, lines.get(0).getQuantity());
-        assertEquals("menu1", lines.get(0).getMenu().getItemName());
+        assertEquals("バーガー", lines.get(0).getMenu().getItemName());
     }
 
     @Test
     public void addCartFailsIfItemNotFound() {
-        boolean result = controller.addCart(99, 1);
+        boolean result = controller.addCart(9999, 1); // 存在しないitemId
         assertFalse(result);
-        assertEquals(0, cart.asList().size());
+        assertEquals(0, controller.getCart().asList().size());
     }
 
     @Test
     public void checkoutWorks() {
-        controller.addCart(1, 1);
+        controller.addCart(potatoId, 1);
         Optional<Order> orderOpt = controller.checkout();
         assertTrue(orderOpt.isPresent());
         Order order = orderOpt.get();
         assertEquals(1, order.asList().size());
-        assertEquals("menu1", order.asList().get(0).getMenu().getItemName());
+        assertEquals("ポテト", order.asList().get(0).getMenu().getItemName());
+        // カートが空になっていること
+        assertTrue(controller.getCart().asList().isEmpty());
     }
 
     @Test
@@ -75,15 +72,15 @@ public class OrderSessionControllerTest {
 
     @Test
     public void updateCartItemQuantityWorks() {
-        controller.addCart(1, 1);
-        boolean result = controller.updateCartItemQuantity(1, 5);
+        controller.addCart(burgerId, 1);
+        boolean result = controller.updateCartItemQuantity(burgerId, 5);
         assertTrue(result);
         assertEquals(5, controller.getCart().asList().get(0).getQuantity());
     }
 
     @Test
     public void updateCartItemQuantityFailsIfInvalidId() {
-        boolean result = controller.updateCartItemQuantity(99, 5);
+        boolean result = controller.updateCartItemQuantity(9999, 5);
         assertFalse(result);
     }
 
@@ -91,8 +88,9 @@ public class OrderSessionControllerTest {
     public void catalogFindByCategoryWorks() {
         boolean result = controller.catalogFindByCategory("Food");
         assertTrue(result);
-        assertEquals(1, controller.getCatalogMenus().size());
-        assertEquals("menu1", controller.getCatalogMenus().get(0).getItemName());
+        List<Menu> found = controller.getCatalogMenus();
+        assertEquals(1, found.size());
+        assertEquals("バーガー", found.get(0).getItemName());
     }
 
     @Test
@@ -114,10 +112,24 @@ public class OrderSessionControllerTest {
     @Test
     public void cartIsEmptyWorks() {
         assertTrue(controller.cartIsEmpty());
-        controller.addCart(1,1);
+        controller.addCart(potatoId, 1);
         assertFalse(controller.cartIsEmpty());
-        controller.updateCartItemQuantity(1, 0);
+        controller.updateCartItemQuantity(potatoId, 0);
         assertTrue(controller.cartIsEmpty());
     }
 
+    @Test
+    public void fetchCatalogReflectsDBChange() {
+        // 追加でメニューをDBに追加
+        int id = db.addNewMenuItem("ナゲット", 350, 10, "Side").get().getItemId();
+        // fetchCatalogでカタログを最新化
+        controller.fetchCatalog();
+        // 全カタログに4品あることを確認
+        assertEquals(4, controller.getCatalogMenus().size());
+    }
+
+    @AfterClass
+    public static void cleanupDB() {
+        db.disconnect();
+    }
 }
