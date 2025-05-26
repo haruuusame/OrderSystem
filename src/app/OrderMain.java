@@ -10,7 +10,7 @@ import view.cli.OrderCliView;
 public class OrderMain {
     public static void main(String[] args) {
 
-        OrderSessionController sessionController = new OrderSessionController(1, "order_management.db");
+        OrderSessionController sessionController = new OrderSessionController(1, "TestMenu.db");
         OrderCliView view = new OrderCliView(sessionController);
 
         view.showMain();  
