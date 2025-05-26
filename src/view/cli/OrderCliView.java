@@ -257,5 +257,4 @@ public class OrderCliView {
         // 到達しないがswitch-caseの一貫性を保つため残す
         return true;
     }
-
 }
