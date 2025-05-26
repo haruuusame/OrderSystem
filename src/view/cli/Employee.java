@@ -79,8 +79,16 @@ public class Employee {
     public static void updateOrderStatus(DBManager dbm) {
         int orderId = ConsoleUtil.safeIntInput("注文番号を入力してください:",scanner);
         int status = ConsoleUtil.safeIntInput("ステータスを入力してください:",scanner);
-        dbm.updateStatusAll(orderId, status);
-        System.out.printf("注文番号%dのステータスを%d:%sに変更しました。\n",orderId,status,convert(status));
+        if (0 <= status && status <= 3) {
+            boolean success = dbm.updateStatusAll(orderId, status);
+            if (success) {
+                System.out.printf("注文番号%dのステータスを%d:%sに変更しました。\n",orderId,status,convert(status));
+            } else {
+                System.out.printf("ステータスを更新できませんでした。(注文番号：%d)\n",orderId);
+            }
+        } else {
+                System.out.printf("不正なステータスです。\n",orderId);
+        }
     }
 
     public static String convert(int status) {
@@ -149,7 +157,7 @@ public class Employee {
         }else{
             MenuCatalog catalog = opCatalog.get();
             for(Menu menu:catalog.getAll()) {
-                System.out.printf(" ・メニュー番号%d:%s %d円\n",menu.getItemId(),menu.getItemName(),menu.getPrice());
+                System.out.printf(" ・メニュー番号%d:%s %d円 %d個\n",menu.getItemId(),menu.getItemName(),menu.getPrice(),menu.getStockQuantity());
             }
         }
     }
