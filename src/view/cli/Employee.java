@@ -1,8 +1,12 @@
-package model;
+package view.cli;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+
+import model.DBManager;
+import model.Order;
+import model.OrderLine;
 
 public class Employee {
     ArrayList<String> itemNameList = new ArrayList<>();

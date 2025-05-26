@@ -122,8 +122,4 @@ public class Cart extends OrderBase {
         }    
     }
 
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> dev

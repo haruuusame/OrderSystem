@@ -101,8 +101,4 @@ public class ConsoleUtil {
         return String.valueOf(c).matches("[\\p{IsHiragana}\\p{IsKatakana}\\p{IsHan}１２３４５６７８９０ー～、。・「」『』【】（）｛｝！？：；｀＋−＝＿｜￥＾＠]");
     }
 
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> dev
