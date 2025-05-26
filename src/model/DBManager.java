@@ -412,12 +412,6 @@ public class DBManager{
         }catch(SQLException e){
             System.err.println("[エラー] "+e.getMessage());
             return false;
-        }finally{
-            try{
-                con.setAutoCommit(true);
-            }catch(SQLException e) {
-                System.out.println("[エラー] "+e.getMessage());
-            }
         }
     }
 
@@ -443,8 +437,11 @@ public class DBManager{
             // ヘッダーのステータスも更新
             updateHeaderStmt.setInt(1, status);
             updateHeaderStmt.setInt(2, orderId);
-            updateHeaderStmt.executeUpdate();
+            int updatedHeaderRows = updateHeaderStmt.executeUpdate();
 
+            if (updatedHeaderRows == 0) {
+                throw new SQLException("ヘッダステータスの更新に失敗しました（対象が存在しない可能性）");
+            }
             con.commit();
             return true;
         } catch (SQLException e) {
