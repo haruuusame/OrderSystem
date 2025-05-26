@@ -10,7 +10,7 @@ import java.util.Optional;
  * 購入確定前の仮の注文データを管理するクラス。
  * 商品を追加・数量変更できる。
  */
-public class Cart extends OrderBase {
+public final class Cart extends OrderBase {
 
     // ======= Field =======
     private int cartId;
