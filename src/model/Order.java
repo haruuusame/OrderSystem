@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 購入が確定した正式な注文履歴を管理するクラス。
  */
-public class Order extends OrderBase{
+public final class Order extends OrderBase{
 
     // ======= Field =======
     private static AtomicInteger orderCount = new AtomicInteger(1);

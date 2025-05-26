@@ -399,7 +399,7 @@ public class DBManager{
     }
 
     // ステータスを更新
-    public void updateStatus(int orderId,int itemId,int status){
+    public boolean updateStatus(int orderId,int itemId,int status){
         String updateDetailSql = "UPDATE order_detail SET status = ? WHERE orderId = ? AND itemId = ?";
         try(
             PreparedStatement updateDetailStmt = con.prepareStatement(updateDetailSql)
@@ -408,20 +408,15 @@ public class DBManager{
             updateDetailStmt.setInt(2,orderId);
             updateDetailStmt.setInt(3,itemId);
             updateDetailStmt.executeUpdate();
-            
+            return true;
         }catch(SQLException e){
             System.err.println("[エラー] "+e.getMessage());
-        }finally{
-            try{
-                con.setAutoCommit(true);
-            }catch(SQLException e) {
-                System.out.println("[エラー] "+e.getMessage());
-            }
+            return false;
         }
     }
 
     // orderIdに属するすべてのstatusを更新する
-    public void updateStatusAll(int orderId, int status) {
+    public boolean updateStatusAll(int orderId, int status) {
         String updateDetailSql = "UPDATE order_detail SET status = ? WHERE orderId = ?";
         String updateHeaderSql = "UPDATE order_header SET status = ? WHERE orderId = ?";
         try (
@@ -442,9 +437,13 @@ public class DBManager{
             // ヘッダーのステータスも更新
             updateHeaderStmt.setInt(1, status);
             updateHeaderStmt.setInt(2, orderId);
-            updateHeaderStmt.executeUpdate();
+            int updatedHeaderRows = updateHeaderStmt.executeUpdate();
 
+            if (updatedHeaderRows == 0) {
+                throw new SQLException("ヘッダステータスの更新に失敗しました（対象が存在しない可能性）");
+            }
             con.commit();
+            return true;
         } catch (SQLException e) {
             try {
                 con.rollback();
@@ -453,6 +452,7 @@ public class DBManager{
                 System.err.println("[ロールバック失敗] " + rollbackEx.getMessage());
             }
             System.err.println("[エラー] " + e.getMessage());
+            return false;
         } finally {
             try {
                 con.setAutoCommit(true);

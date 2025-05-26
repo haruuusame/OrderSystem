@@ -7,7 +7,7 @@ import java.util.Map;
 /**
  * カートと注文履歴の共通機能(商品リスト管理、合計金額計算)を提供する抽象クラス。
  */
-public abstract class OrderBase {
+public abstract sealed class OrderBase permits Cart, Order{
 
     // ======= Field =======
     protected Map<Integer, OrderLine> itemMap;

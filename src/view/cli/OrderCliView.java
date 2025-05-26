@@ -155,7 +155,7 @@ public class OrderCliView {
         }
 
         // 数字入力受付
-        System.out.println("個数を変更する商品を選択してください。");
+        System.out.println("個数を変更する商品を選択してください。\nキャンセルする場合は、個数を0個にしてください。");
         showCart();
         int itemId = ConsoleUtil.safeIntInput("メニュー番号:", scanner);
         int quantity = ConsoleUtil.safeIntInput("新しい個数:",scanner);
