@@ -1,4 +1,4 @@
-package customer;
+package view.cli;
 
 import model.Order;
 import model.OrderLine;

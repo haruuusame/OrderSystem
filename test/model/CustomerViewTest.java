@@ -1,8 +1,8 @@
 package test.model;
-import customer.CustomerView;
 import model.Menu;
 import model.Order;
 import model.OrderLine;
+import view.cli.CustomerView;
 
 import org.junit.After;
 import org.junit.Before;
@@ -42,7 +42,7 @@ public class CustomerViewTest {
     Map<Integer, OrderLine> itemMap = new HashMap<>();
     itemMap.put(1, line);
 
-    return new Order(itemMap, 1001, LocalDateTime.of(2025, 5, 20, 12, 0));
+    return new Order(itemMap, 1001, LocalDateTime.of(2025, 5, 20, 12, 0),0);
 }
 
 
