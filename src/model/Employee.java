@@ -69,8 +69,10 @@ public class Employee {
     }
 
     public static void updateOrderStatus(int orderId, int status, DBManager dbm) {
-        dbm.updateStatusAll(orderId, status);
-        System.out.printf("注文ID%dのステータスを%d:%sに変更しました。\n",orderId,status,convert(status));
+        if (dbm.updateStatusAll(orderId, status))
+            System.out.printf("注文ID%dのステータスを%d:%sに変更しました。\n",orderId,status,convert(status));
+        else
+            System.out.printf("注文ID%dのステータスの更新に失敗しました。\n", orderId);
     }
 
     public static String convert(int status) {
