@@ -2,27 +2,42 @@
 プログラミング応用の課題
 
 ## 概要
-このリポジトリはJava 17を用いた簡易注文管理システム。
-VS Code の Dev Container を活用し、全員が同一の環境で作業できるよう構成。
+このリポジトリはJava 17を用いた簡易注文管理システムです。
+VS Code の Dev Container を活用し、全員が同一の環境で作業できるよう構成されています。
 
 - 使用言語: Java 17 (CSE準拠)
 - データベース: SQLite
 - テスト: JUnit4
-- UI: Swing または JavaFX (※要検討)
-- ビルドツール: 手動 (Makefile予定)
+- UI: ターミナル
+- ビルドツール/実行ツール: Makefile
 
 ---
 
-## ディレクトリ構成(仮)
+## 実行方法
+
+以下のコマンドはすべて`Makefile`を使って実行できます。
+- `make order`
+    - 注文画面を表示
+- `make display`
+    - 呼び出し画面を表示
+- `make employee`
+    - 従業員画面を表示
+- `make build`
+    - Javaファイルをコンパイル
+- `make clean`
+    - ビルド生成物を削除
+
+## ディレクトリ構成
 ```bash
-├── data/              # 画像やデータベース（.db, .sql, .png など）を格納
+├── data/              # データベース（.db）を格納
 ├── out/               # コンパイル結果（.classファイル）を出力
 ├── lib/               # SQLiteやJUnitなどの外部ライブラリ（.jar）
 ├── src/               # メインのJavaコード
-│   ├── controller/    # ユーザー操作の処理（例: ボタン押下時呼び出される処理）
-│   ├── model/         # データモデル（例: 商品や注文などのクラス）
-│   ├── util/          # DB操作や共通処理
-│   └── view/          # ユーザー画面（CUI/GUIなど）
+│   ├── app/           # 実行ファイル
+│   ├── controller/    # コントローラ
+│   ├── model/         # モデルとDB操作
+│   ├── view/          # 画面描画
+│   └── util/          # 汎用関数
 ├── test/              # テストコード（JUnit など）
 └── .devcontainer/     # DevContainer用設定ファイル（VS Code共有用）
 ```
@@ -89,9 +104,6 @@ code .              #VS Codeをカレントディレクトリで起動
     - 表示されなかったら画面左下の青い><をクリックし、`コンテナーで再度開く`をクリック
 5. 起動が完了したらVS Codeのターミナルを開き、`VS Code ➜ /workspaces/OrderSystem $`と表示されていることを確認
 
-## 開発方法(ビルド・実行)
-準備中
-
 ## 開発方法(Git関連)
 
 ### GitHub上のリポジトリをローカルにクローン
@@ -118,8 +130,9 @@ code .              #VS Codeをカレントディレクトリで起動
 - `git pull origin <ブランチ名>`
 ### 変更を登録(ステージング)
 ```bash
-git add .    #新規/変更のみ
-git add -A   #削除含む全作業
+git add <file> # 特定ファイルを登録
+git add .      # 新規/変更のみ
+git add -A     # 削除含む全作業
 ```
 ### ファイル状態の確認
 - `git status`
