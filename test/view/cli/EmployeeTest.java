@@ -1,32 +1,29 @@
 package test.view.cli;
 
-import java.time.LocalDateTime;
-import java.util.*;
-
 import model.*;
 import view.cli.Employee;
 
 public class EmployeeTest {
     public static void main(String[] args) {
-        // モックDB作成
-        DBManagerMock dbm = new DBManagerMock();
+        // DB作成
+        DBManager dbm = new DBManager("TestMenu.db");
 
         System.out.println("=== showOrder テスト ===");
-        Employee.showOrder(1, dbm);
+        Employee.showOrder(dbm);
         System.out.println();
 
         System.out.println("=== showOrderHistory (-1: 全件) テスト ===");
-        Employee.showOrderHistory(-1, dbm);
+        Employee.showOrderHistory(dbm);
         System.out.println();
 
         System.out.println("=== updateStock テスト ===");
-        Employee.updateStock(1001, 5, dbm);
+        Employee.updateStock(dbm);
         System.out.println();
 
         System.out.println("=== updateOrderStatus テスト ===");
-        Employee.updateOrderStatus(1, 2, dbm);
+        Employee.updateOrderStatus(dbm);
     }
-
+/*
     // ===== モックDB定義 =====
     static class DBManagerMock extends DBManager {
         private List<Order> dummyOrders;
@@ -88,14 +85,14 @@ public class EmployeeTest {
             return true; // 常に成功にするモック処理
         }
 
-        public void updateStatusAll(int orderId, int status) {
+        public boolean updateStatusAll(int orderId, int status) {
             for (Order order : dummyOrders) {
                 if (order.getOrderId() == orderId) {
                     order.setStatus(status);
                 }
             }
         }
-    }
+    }*/
 }
 
 
