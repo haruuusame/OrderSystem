@@ -44,6 +44,11 @@ public class OrderCliView {
 
     // 画面を呼び出すメソッド
     public void showMain() {
+<<<<<<< HEAD
+=======
+        // カタログフェッチ
+        sessionController.fetchCatalog();
+>>>>>>> dev
         // 初回に描画する
         ConsoleUtil.showHeader("OrderSystem");
         showMenuList();   
@@ -256,4 +261,8 @@ public class OrderCliView {
         return true;
     }
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> dev

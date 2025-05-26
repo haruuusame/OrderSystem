@@ -16,10 +16,13 @@ public class DBManager{
     private String URL;
     public Connection con = null;
 
+<<<<<<< HEAD
     public DBManager(){
         
     }
 
+=======
+>>>>>>> dev
     public DBManager(String filename){
         String baseDir = System.getProperty("user.dir");
         URL = "jdbc:sqlite:" + baseDir + "/data/" + filename;

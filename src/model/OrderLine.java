@@ -58,6 +58,14 @@ public class OrderLine {
     public OrderLine deepcopy() {
         return new OrderLine(this.getMenu().copy(),this.getQuantity());
     }
+<<<<<<< HEAD
+=======
+        // 小計（単価 × 数量）を返すメソッド
+    public int getSubtotal() {
+        return menu.getPrice() * quantity;
+    }
+
+>>>>>>> dev
 
     // ======= Other Method =======
 
@@ -73,4 +81,8 @@ public class OrderLine {
         return Objects.hash(menu.getItemId(), quantity);
     }
 
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> dev

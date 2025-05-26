@@ -1,9 +1,10 @@
-package view.cli;
+package test.view.cli;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
 import model.*;
+import view.cli.Employee;
 
 public class EmployeeTest {
     public static void main(String[] args) {
