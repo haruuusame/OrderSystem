@@ -9,7 +9,7 @@ import view.cli.Employee;
  */
 public class EmployeeMain {
     public static void main(String[] args) {
-        DBManager dbManager = new DBManager("TestMenu.db");
+        DBManager dbManager = new DBManager("order_management.db");
         dbManager.connect();
 
         Employee.showMain(dbManager);
